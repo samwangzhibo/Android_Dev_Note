@@ -1,4 +1,20 @@
-### 1.注解
+-  [注解](#1.注解)
+	+ [`getAnnotation` 过程](#getAnnotation的流程)
+- [内部类](#2. 内部类)
+- final
+- 动态代理
+- 线程
+	+ Thread类
+	+ Object类
+	+ 线程的生命周期
+-  ThreadLocal
+-  	final、finally、finalize()分别表示什么含义
+-  kotlin
+-  线程池
+- 异常
+- 枚举
+---
+### <a id="1.注解">1.注解</a>
 注解的引入主要是为了和代码紧耦合的添加注释信息，java中常见的注解有@Override、@Deprecated，用Override修饰的方法，在编译的时候会去检查是否是父类存在这个方法，然后编译器提示。
 注解我们使用的时候是这样声明的，其中上面的 `@Retention` 和 `@Target` 是元注解。 `@Retention` 主要是用于修饰注解的的运行时机，是在运行时还是编译时。`@Target` 用于修饰注解修饰的域，是类还是成员变量还是方法。
 ```java
@@ -21,10 +37,10 @@ void a();
 
 [JAVA 注解的基本原理](https://juejin.im/post/5b45bd715188251b3a1db54f)
 
-#### getAnnotation的流程
+#### <a id="getAnnotation的流程">getAnnotation的流程</a>
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190308115403444.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
-### 2. 内部类
+### <a id="2. 内部类">2. 内部类</a>
 内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，不允许除外部类外的其他类访问它；根据内部类定义的位置，可以分为几类。
 -  成员内部类
   能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
@@ -104,10 +120,95 @@ public Destionation destionation(final String str) {
 * 成员变量 
   只能被初始化一次。
 
+### 动态代理
+- 好处：比静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
+- 使用：通过 `Proxy.newProxyInstance(classLoader，Class<?>[] inters, invocationHandler)` 生成代理对象
+- 原理：自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。
+```java
+//动态代理类 代理类继承了IBossImpl 接口
+public final class $Proxy0 extends Proxy implements IBossImpl {
+    private static Method m1;
+    private static Method m3;
+    private static Method m2;
+    private static Method m4;
+    private static Method m0;
+ 
+    public $Proxy0(InvocationHandler var1) throws  {
+        super(var1);
+    }
+ 
+    public final boolean equals(Object var1) throws  {
+        try {
+            return ((Boolean)super.h.invoke(this, m1, new Object[]{var1})).booleanValue();
+        } catch (RuntimeException | Error var3) {
+            throw var3;
+        } catch (Throwable var4) {
+            throw new UndeclaredThrowableException(var4);
+        }
+    }
+    
+    //实现buy方法
+    public final String buy(Object var1) throws  {
+        try {
+            return (String)super.h.invoke(this, m3, new Object[]{var1});
+        } catch (RuntimeException | Error var3) {
+            throw var3;
+        } catch (Throwable var4) {
+            throw new UndeclaredThrowableException(var4);
+        }
+    }
+ 
+    public final String toString() throws  {
+        try {
+            return (String)super.h.invoke(this, m2, (Object[])null);
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+ 
+    //实现发邮件方法 
+    public final String email(Object var1) throws  {
+        try {
+            return (String)super.h.invoke(this, m4, new Object[]{var1});
+        } catch (RuntimeException | Error var3) {
+            throw var3;
+        } catch (Throwable var4) {
+            throw new UndeclaredThrowableException(var4);
+        }
+    }
+ 
+    public final int hashCode() throws  {
+        try {
+            return ((Integer)super.h.invoke(this, m0, (Object[])null)).intValue();
+        } catch (RuntimeException | Error var2) {
+            throw var2;
+        } catch (Throwable var3) {
+            throw new UndeclaredThrowableException(var3);
+        }
+    }
+ 
+    static {
+        try {
+            m1 = Class.forName("java.lang.Object").getMethod("equals", new Class[]{Class.forName("java.lang.Object")});
+            m3 = Class.forName("com.example.wangzhibo.lovestudy.jvm.dproxy.IBossImpl").getMethod("buy", new Class[]{Class.forName("java.lang.Object")});
+            m2 = Class.forName("java.lang.Object").getMethod("toString", new Class[0]);
+            m4 = Class.forName("com.example.wangzhibo.lovestudy.jvm.dproxy.IBossImpl").getMethod("email", new Class[]{Class.forName("java.lang.Object")});
+            m0 = Class.forName("java.lang.Object").getMethod("hashCode", new Class[0]);
+        } catch (NoSuchMethodException var2) {
+            throw new NoSuchMethodError(var2.getMessage());
+        } catch (ClassNotFoundException var3) {
+            throw new NoClassDefFoundError(var3.getMessage());
+        }
+    }
+}
+```
 ### 线程
 #### Thread类
 - sleep：暂停当前正在执行的线程；不释放锁（类方法）
 - yield：暂停当前正在执行的线程，并执行其他线程；（类方法）
+> 释放CPU时间片
 - join：暂停调用线程，等该线程终止之后再执行当前线程；
 
 ```java
@@ -124,8 +225,11 @@ Thread thread2 = new Thread(){
 - interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；
 
 #### Object类
+锁池：存放竞争锁的线程
+等待池：等待线程，当被唤醒的时候，会进入锁池
 - wait：暂停当前正在执行的线程，直到调用notify()或notifyAll()方法或超时，退出等待状态；(需要先获得锁)
-- notify：唤醒在该对象上等待的一个线程；(需要先获得锁)
+- notify：唤醒在该对象上等待的一个线程；(需要先获得锁) 
+>需要注意的是，notify只会随机唤醒一个线程，如果线程
 - notifyAll：唤醒在该对象上等待的所有线程；(需要先获得锁)
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
@@ -203,7 +307,7 @@ ThreadLocal类
 >
 >   - volatile： 本身就包含了禁止指令重排序的语义
 >   - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
-
+[java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
 
 ### 线程池
@@ -249,3 +353,65 @@ ThreadLocal类
     - 检查异常（Checked Exceptions）
       - 特点：一个方法必须通过throws语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
       - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` 
+
+### 枚举
+通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
+```java
+enum Week{
+	Monday, Tuesday
+}
+```
+```java
+/**
+ * 一个enum除了不能继承自一个enum之外(编译器不让)，我们基本上可以将enum看作一个常规的类。也就是说我们可以向enum中添加方法。
+ *
+ * 生成的CustomEnum自动继承自Enum<CustomEnum>，所以我们不能再继承Enum了，单继承。
+ * Created by samwangzhibo on 2019/3/21.
+ */
+
+public enum CustomEnum {
+    Normal("平常", 1) {
+        @Override
+        String getInfo() {
+            return "平常信息";
+        }
+    }, High("高", 2) {
+        @Override
+        String getInfo() {
+            return "高信息";
+        }
+    }, Low("低", 3) {
+        @Override
+        String getInfo() {
+            return "低信息";
+        }
+    };
+
+    private String description;
+    private int value;
+
+    CustomEnum(String description, int value) {
+        this.description = description;
+        this.value = value;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    /**
+     * 抽象方法，类没有生命成abstract 编译器会自动生成abstract
+     * Normal High Low 会自动申明匿名内部类
+     * @return
+     */
+    abstract String getInfo();
+
+}
+```
+
+[深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
+![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
