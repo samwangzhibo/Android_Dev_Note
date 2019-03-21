@@ -1,7 +1,7 @@
 -  [注解](#1.注解)
 	+ [`getAnnotation` 过程](#getAnnotation的流程)
 - [内部类](#2. 内部类)
-- final
+- [final](#final)
 - 动态代理
 - 线程
 	+ Thread类
@@ -55,7 +55,7 @@ void a();
 [java提高篇(八)----详解内部类](https://www.cnblogs.com/chenssy/p/3388487.html)
 
 
-### 3. final
+### <a id="final">3. final</a>
 - 修饰类 类不能被继承，比如String就是final类型的，内部是字符串的封装操作，系统不希望它被重写。
 - 修饰方法 方法不能被子类重写。
   比如View的measure、layout、draw，因为它们内部有缓存逻辑，比如measure会通过计算父布局传过来的MeasureSpec和缓存的meaSpec做比较，然后来控制onMeasure的调用。这个会MeasureSpec是父布局通过父View的measureSpec和子View的LayoutParams 生成的measureSpec，最终传给子View的onMeasure方法。MeasureSpec是32位的整型。前2位是模式，后30位是size。模式分为 `Unspesfic`、`At_most`、`Exctly`，我们自定义View需要处理 `at_most` 模式，比如`TextView` 的 `at_most` 模式就是按照字体的大小和个数来计算出来的。
@@ -120,7 +120,7 @@ public Destionation destionation(final String str) {
 * 成员变量 
   只能被初始化一次。
 
-### 动态代理
+### <a id="动态代理">动态代理</a>
 - 好处：比静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
 - 使用：通过 `Proxy.newProxyInstance(classLoader，Class<?>[] inters, invocationHandler)` 生成代理对象
 - 原理：自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。
