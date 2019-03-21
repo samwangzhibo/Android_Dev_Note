@@ -8,8 +8,9 @@
 	+ [Object类](#Object类)
 	+ [线程的生命周期](#线程生命周期)
 -  [ThreadLocal](#ThreadLocal)
--  [final、finally、finalize()分别表示什么含义](#final、finally、finalize()分别表示什么含义)
+-  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 -  [kotlin](#kotlin)
+- [布局优化](#布局优化)
 -  [线程池](#线程池)
 - [异常](#异常)
 - [枚举](#枚举)
@@ -248,7 +249,7 @@ ThreadLocal类
 
 
 
-### final、finally、finalize()分别表示什么含义
+### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
 > - 技术点：final、finally、finalize()
 > - 参考回答：
 > * final关键字表示不可更改，具体体现在：
@@ -264,12 +265,12 @@ ThreadLocal类
 
 
 
-### kotlin
+### <a id="kotlin">kotlin</a>
 [用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
 
-`Q：布局上如何优化？`
+### <a id="布局优化">`Q：布局上如何优化？`</a>
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
 >   + 多嵌套情况下可使用RelativeLayout减少嵌套。
@@ -281,7 +282,7 @@ ThreadLocal类
 
 
 
-`Q：什么是线程安全？保障线程安全有哪些手段？`
+### `Q：什么是线程安全？保障线程安全有哪些手段？`
 
 >  技术点：线程安全
 >
