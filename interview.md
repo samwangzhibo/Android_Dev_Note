@@ -2,17 +2,19 @@
 	+ [`getAnnotation` 过程](#getAnnotation的流程)
 - [内部类](#2. 内部类)
 - [final](#final)
-- 动态代理
-- 线程
-	+ Thread类
-	+ Object类
-	+ 线程的生命周期
--  ThreadLocal
--  	final、finally、finalize()分别表示什么含义
--  kotlin
--  线程池
-- 异常
-- 枚举
+- [动态代理](#动态代理)
+- [线程](#线程)
+	+ [Thread类](#Thread类)
+	+ [Object类](#Object类)
+	+ [线程的生命周期](#线程生命周期)
+-  [ThreadLocal](#ThreadLocal)
+-  [final、finally、finalize()分别表示什么含义](#final、finally、finalize()分别表示什么含义)
+-  [kotlin](#kotlin)
+-  [线程池](#线程池)
+- [异常](#异常)
+- [枚举](#枚举)
+- [范型](#范型)
+
 ---
 ### <a id="1.注解">1.注解</a>
 注解的引入主要是为了和代码紧耦合的添加注释信息，java中常见的注解有@Override、@Deprecated，用Override修饰的方法，在编译的时候会去检查是否是父类存在这个方法，然后编译器提示。
@@ -204,8 +206,8 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
     }
 }
 ```
-### 线程
-#### Thread类
+### <a id="线程">线程</a>
+#### <a id="Thread"类>Thread类</a>
 - sleep：暂停当前正在执行的线程；不释放锁（类方法）
 - yield：暂停当前正在执行的线程，并执行其他线程；（类方法）
 > 释放CPU时间片
@@ -224,7 +226,7 @@ Thread thread2 = new Thread(){
 
 - interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；
 
-#### Object类
+#### <a id="Object类">Object类</a>
 锁池：存放竞争锁的线程
 等待池：等待线程，当被唤醒的时候，会进入锁池
 - wait：暂停当前正在执行的线程，直到调用notify()或notifyAll()方法或超时，退出等待状态；(需要先获得锁)
@@ -233,7 +235,7 @@ Thread thread2 = new Thread(){
 - notifyAll：唤醒在该对象上等待的所有线程；(需要先获得锁)
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
-
+<a id="线程生命周期">线程生命周期</a>
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
 ### ThreadLocal
@@ -341,7 +343,7 @@ ThreadLocal类
 
 
 
-### 异常
+### <a id="异常">异常</a>
 
 - 分类
   -  Error
@@ -354,7 +356,7 @@ ThreadLocal类
       - 特点：一个方法必须通过throws语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
       - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` 
 
-### 枚举
+### <a id="枚举">枚举<a/>
 通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
 ```java
 enum Week{
@@ -415,3 +417,14 @@ public enum CustomEnum {
 
 [深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
 ![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+
+
+
+### <a id="范型">范型</a>
+
+
+
+
+
+
