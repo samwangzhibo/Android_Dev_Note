@@ -312,7 +312,7 @@ ThreadLocal类
 [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
 
-### 线程池
+### <a id="线程池">线程池</a>
 
 `execute和submit的区别`
 
@@ -347,7 +347,7 @@ ThreadLocal类
 
 - 分类
   -  Error
-    - 错误，不能通过代码修复的
+    - 错误，不能通过代码修复的，可以不用处理
   - Exception
     - 执行异常（RuntimeException）
       - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都无需在`throws`子句中进行声明
