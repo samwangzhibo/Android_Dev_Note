@@ -239,7 +239,7 @@ Thread thread2 = new Thread(){
 <a id="线程生命周期">线程生命周期</a>
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
-### ThreadLocal
+### <a id="ThreadLocal">ThreadLocal</a>
 ThreadLocal类
 
 - 背景：可实现线程本地存储的功能，把共享数据的可见范围限制在同一个线程之内，无须同步就能保证线程之间不出现数据争用的问题，这里可理解为ThreadLocal很方便的找到本线程的Looper。
