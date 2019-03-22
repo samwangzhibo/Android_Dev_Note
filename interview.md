@@ -424,7 +424,7 @@ public enum CustomEnum {
 
 ### <a id="范型">范型</a>
 
-
+- 背景：如果没有范型，比如
 
 
 
