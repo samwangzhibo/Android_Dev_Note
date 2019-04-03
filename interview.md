@@ -1,5 +1,5 @@
+-  [JVM内存模型](内存模型)
 -  [注解](#1.注解)
-
     -  [`getAnnotation` 过程](#getAnnotation的流程)
 -  [内部类](#内部类)
 -  [final](#final)
@@ -12,6 +12,7 @@
   + [Object类](#Object类)
   + [线程的生命周期](#线程生命周期)
 -  [ThreadLocal](#ThreadLocal)
+-  [volatile](#volatile)
 -  [线程池](#线程池)
 -  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 -  [kotlin](#kotlin)
@@ -19,7 +20,33 @@
 -  [死锁](#死锁)
 
 ---
+### <a id="内存模型">0. JVM内存模型</a>
+
+| Java堆：存对象，gc最重要的区域 分为年轻代、年老代和永久代 | （Program Counter）程序计数器:无OOM            |
+| --------------------------------------------------------- | ---------------------------------------------- |
+|                                                           | 虚拟机栈：方法，异常Outofmemory和stackoverflow |
+| 方法区：静态常量、class类描述、常量池                     | 本地方栈：native方法                           |
+| **线程共享**                                              | **线程私有**                                   |
+
+- **GC背景**: `System.gc()` 建议jvm gc，在gc之前会调用对象的 `finalized()`
+
+- gc算法分类
+  - 1.程序计数器，引用+1，销毁、失效-1 
+  - 2.可达性分析 
+    -  GRoot 静态对象、常量池对象
+- 分代回收
+  - **新生代**： 一个eden区，两个存活区。Eden满后，把存活的对象复制到存活区。存活区满后，把仍存活的对象复制到另一个存活区，这个也满了后，仍存活的复制到另一个存活区。
+    - young gc：停止复制算法stop-the-world 
+       ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404012731306.png)
+  - **年老代** ：young gc几次（默认8次，可调参）后仍存活的复制到年老代、大对象存年老代
+    - full gc：标记整理算法，即标记出存活的对象，清除没有引用的对象，并压缩
+    - 特殊：如果**年老代对年轻代**对象存在引用，young gc时查询年老代确定是否可清理。查询方式，查 `card table` 表。年老代维护了一个512byte 的card table，存储的是年老代堆年轻代对象的引用。
+- 垃圾收集器
+  - 并行和串行收集器
+  - CMS 收集器 “最短回收停顿优先”收集器（标记—清除算法：初始标记—并发标记—重新标记—并发清除）
+
 ### <a id="1.注解">1.注解</a>
+
 注解的引入主要是为了和代码紧耦合的添加注释信息，java中常见的注解有@Override、@Deprecated，用Override修饰的方法，在编译的时候会去检查是否是父类存在这个方法，然后编译器提示。
 注解我们使用的时候是这样声明的，其中上面的 `@Retention` 和 `@Target` 是元注解。 `@Retention` 主要是用于修饰注解的的运行时机，是在运行时还是编译时。`@Target` 用于修饰注解修饰的域，是类还是成员变量还是方法。
 
@@ -228,7 +255,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
   - 非限定通配符 ? 表示任意类型 `Class<? extends Annotation>`
   - 上下界
     -  `super` 是某个类的父类 比如 `<? super Integer>`  
-    - `extends` 某个类的子类 比如 `<? extends Number>` Intenger和long都能放 
+    -  `extends` 某个类的子类 比如 `<? extends Number>` Intenger和long都能放 
 - **原理**：范型擦除  最终都是`Object` 类
 
 [Java泛型常见面试题](https://blog.csdn.net/qq_25827845/article/details/76735277)
@@ -341,6 +368,12 @@ ThreadLocal类
   使用：ThreadLocal<T>.set(T)  ThreadLocal.get()
 - 原理：每个线程的Thread对象中都有一个ThreadLocalMap 对象`ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue)`，它存储了一组以ThreadLocal.threadLocalHashCode为key、以本地线程变量为value的键值对，而ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，也就包含了一个独一无二的threadLocalHashCode值，通过这个值就可以在线程键值值对中找回对应的本地线程变量。
   需要注意的点就是ThreadLocal的Entry使用的是弱引用，是因为ThreadLocal变量会被线程一直持有，容易造成内存泄露 ，所以使用弱引用。
+
+
+
+### <a id="volatile">`volatile`</a>
+
+(背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，lock之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
 
 
@@ -589,11 +622,3 @@ ThreadLocal类
 ####  `invalidate`原理
 
 `View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
-
-
-
-
-
-### `volatile`
-
-(背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，lock之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
