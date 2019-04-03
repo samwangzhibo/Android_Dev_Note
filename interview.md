@@ -1,25 +1,28 @@
 -  [注解](#1.注解)
-	+ [`getAnnotation` 过程](#getAnnotation的流程)
-- [内部类](#2. 内部类)
-- [final](#final)
-- [动态代理](#动态代理)
-- [线程](#线程)
-	+ [Thread类](#Thread类)
-	+ [Object类](#Object类)
-	+ [线程的生命周期](#线程生命周期)
+
+    -  [`getAnnotation` 过程](#getAnnotation的流程)
+-  [内部类](#内部类)
+-  [final](#final)
+-  [动态代理](#动态代理)
+-  [枚举](#枚举)
+-  [范型](#范型)
+-  [异常](#异常)
+-  [线程](#线程)
+  + [Thread类](#Thread类)
+  + [Object类](#Object类)
+  + [线程的生命周期](#线程生命周期)
 -  [ThreadLocal](#ThreadLocal)
+-  [线程池](#线程池)
 -  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 -  [kotlin](#kotlin)
-- [布局优化](#布局优化)
--  [线程池](#线程池)
-- [异常](#异常)
-- [枚举](#枚举)
-- [范型](#范型)
+-  [布局优化](#布局优化)
+-  [死锁](#死锁)
 
 ---
 ### <a id="1.注解">1.注解</a>
 注解的引入主要是为了和代码紧耦合的添加注释信息，java中常见的注解有@Override、@Deprecated，用Override修饰的方法，在编译的时候会去检查是否是父类存在这个方法，然后编译器提示。
 注解我们使用的时候是这样声明的，其中上面的 `@Retention` 和 `@Target` 是元注解。 `@Retention` 主要是用于修饰注解的的运行时机，是在运行时还是编译时。`@Target` 用于修饰注解修饰的域，是类还是成员变量还是方法。
+
 ```java
 @Retention 修饰运行时机  编译 运行时
 @Target 修饰类型 比如方法 类 成员变量
@@ -35,15 +38,19 @@ void a();
 (Path(getMethod("a").getAnnotation(Path.class))) .value();
 ```
 可以看到实际上注解是一个接口，`Method`有一个成员变量map<<? extends Annotation>, Annotations> ，我们通过Method的getAnnotation方法获取注解，再通过value()方法获取我们注解的时候设置的value属性值。因为Method、Construcator、Class等其实都是集成自 `AnnotatedElement` 这个接口，里面有 `getAnnotation` 方法，所以他们都可以获取注解。
-![](https://img-blog.csdnimg.cn/20190307221124191.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+![AnnotationElement的继承结构](https://img-blog.csdnimg.cn/20190307221124191.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 他们之所以能获取注解，实际上编译器会在编译时会把注解信息写入class里面 `Method` 的属性表，然后我们调用 `getAnnotation` 去获取注解，首先是判断本地有没有 `annotations` 这个成员变量。没有的话，实际上是生成继承至这个注解接口的动态代理对象，然后这里面会实例化一个 `annotationInvocationHandler` 对象，通过注解解析器去解析字节码里面的属性表，维护到这个 `annotationInvocationHandler`里面的 Map<key, value>。然后调用  `value` 方法的时候，判断Method 的名字 `value` 交给 `invocationHandler`，然后去 `InvocationHandler` 里面去取数据。
 
 [JAVA 注解的基本原理](https://juejin.im/post/5b45bd715188251b3a1db54f)
 
 #### <a id="getAnnotation的流程">getAnnotation的流程</a>
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190308115403444.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
-### <a id="2. 内部类">2. 内部类</a>
+![getAnnotation函数调用](https://img-blog.csdnimg.cn/20190308115403444.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+> `getAnnotation()` 发现没有缓存的 `Annotation` 对象， 通过`AnnotationParser` 解析属性表里面的注解信息到一个map，然后生成 `AnnotationInvocationHandler`，并且生成一个动态代理的Proxy类，然后把代理方法派发给`Handler`，`Handler` 通过方法名比如`value`从Map里面获取属性表参数.
+
+![memberValues存放方法名、值](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+![动态代理与invocationHandler](https://img-blog.csdnimg.cn/20190403123142530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+### <a id="内部类">2. 内部类</a>
 内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，不允许除外部类外的其他类访问它；根据内部类定义的位置，可以分为几类。
 -  成员内部类
   能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
@@ -207,11 +214,99 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
     }
 }
 ```
+
+
+
+
+### <a id="范型">范型</a>
+
+- **背景**：如果没有范型，比如 `Object[] a = new String[100];`，你修改a的时候，比如放入`1`，取出来使用的时候，可能会抛出 `ClassCastException`
+- **范型使用**
+  - `class Stack<T> ` 修饰类
+  - `<T> T poll(T element) ` 修饰方法
+- **特点**
+  - 非限定通配符 ? 表示任意类型 `Class<? extends Annotation>`
+  - 上下界
+    -  `super` 是某个类的父类 比如 `<? super Integer>`  
+    - `extends` 某个类的子类 比如 `<? extends Number>` Intenger和long都能放 
+- **原理**：范型擦除  最终都是`Object` 类
+
+[Java泛型常见面试题](https://blog.csdn.net/qq_25827845/article/details/76735277)
+
+
+
+### <a id="枚举">枚举</a>
+
+通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
+
+```java
+enum Week{
+	Monday, Tuesday
+}
+```
+
+```java
+/**
+ * 一个enum除了不能继承自一个enum之外(编译器不让)，我们基本上可以将enum看作一个常规的类。也就是说我们可以向enum中添加方法。
+ *
+ * 生成的CustomEnum自动继承自Enum<CustomEnum>，所以我们不能再继承Enum了，单继承。
+ * Created by samwangzhibo on 2019/3/21.
+ */
+
+public enum CustomEnum {
+    Normal("平常", 1) {
+        @Override
+        String getInfo() {
+            return "平常信息";
+        }
+    }, High("高", 2) {
+        @Override
+        String getInfo() {
+            return "高信息";
+        }
+    }, Low("低", 3) {
+        @Override
+        String getInfo() {
+            return "低信息";
+        }
+    };
+
+    private String description;
+    private int value;
+
+    CustomEnum(String description, int value) {
+        this.description = description;
+        this.value = value;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    /**
+     * 抽象方法，类没有生命成abstract 编译器会自动生成abstract
+     * Normal High Low 会自动申明匿名内部类
+     * @return
+     */
+    abstract String getInfo();
+
+}
+```
+
+[深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
+![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+
+
 ### <a id="线程">线程</a>
-#### <a id="Thread"类>Thread类</a>
+
+#### <a id="Thread">Thread类</a>
 - sleep：暂停当前正在执行的线程；不释放锁（类方法）
-- yield：暂停当前正在执行的线程，并执行其他线程；（类方法）
-> 释放CPU时间片
+- yield：释放当前线程CPU时间片，让他回到就绪状态，并执行其他线程；（类方法）
 - join：暂停调用线程，等该线程终止之后再执行当前线程；
 
 ```java
@@ -286,31 +381,31 @@ ThreadLocal类
 
 >  技术点：线程安全
 >
-> 思路：详见[要点提炼| 理解JVM之线程安全&锁优化](https://www.jianshu.com/p/ca8801044352) 
+>  思路：详见[要点提炼| 理解JVM之线程安全&锁优化](https://www.jianshu.com/p/ca8801044352) 
 >
-> 参考回答：线程安全就是当多个线程访问一个对象时，如果不用考虑这些线程在运行时环境下的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那这个对象是线程安全的。保证线程安全可从多线程三特性出发： 
+>  参考回答：线程安全就是当多个线程访问一个对象时，如果不用考虑这些线程在运行时环境下的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那这个对象是线程安全的。保证线程安全可从多线程三特性出发： 
 >
-> - 原子性
+>  - 原子性
 >
->   （Atomicity）：单个或多个操作是要么全部执行，要么都不执行 
+>  （Atomicity）：单个或多个操作是要么全部执行，要么都不执行 
 >
 >   - Lock：保证同时只有一个线程能拿到锁，并执行申请锁和释放锁的代码
 >   - synchronized：对线程加独占锁，被它修饰的类/方法/变量只允许一个线程访问
 >
-> - 可见性
+>  - 可见性
 >
->   （Visibility）：当一个线程修改了共享变量的值，其他线程能够立即得知这个修改 
+>  （Visibility）：当一个线程修改了共享变量的值，其他线程能够立即得知这个修改 
 >
 >   - volatile：保证新值能**立即**同步到主内存，且每次使用前立即从主内存刷新；
 >   - synchronized：在释放锁之前会将工作内存新值更新到主存中
 >
-> - 有序性
+>  - 有序性
 >
->   （Ordering）：程序代码按照指令顺序执行 
+>  （Ordering）：程序代码按照指令顺序执行 
 >
 >   - volatile： 本身就包含了禁止指令重排序的语义
 >   - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
-[java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
+>    [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
 
 ### <a id="线程池">线程池</a>
@@ -348,84 +443,157 @@ ThreadLocal类
 
 - 分类
   -  Error
-    - 错误，不能通过代码修复的，可以不用处理
-  - Exception
+    - 错误，不能通过代码修复的，可以不用处理 
+    - 例子：`StackOverFlowError` `OutOfMemoryError`
+  -  Exception
     - 执行异常（RuntimeException）
       - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都无需在`throws`子句中进行声明
-      - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException`
+      - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException` `ConcurrentModifyException`
     - 检查异常（Checked Exceptions）
       - 特点：一个方法必须通过throws语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
-      - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` 
+      - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
 
-### <a id="枚举">枚举<a/>
-通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
+
+
+
+
+
+
+
+
+### RecyclerView
+
+
+
+[RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
+
+
+
+
+
+### Retrofit
+
+
+
+
+
+### InputManagerService
+
+[十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
+
+
+
+
+
+### CopyOnWriteArrayList
+
+[先简单说一说Java中的CopyOnWriteArrayList](https://juejin.im/post/5aaa2ba8f265da239530b69e)
+
+- 背景：concurrentModifyException(在迭代的时候添加了数据)
+
+
+
+
+
+
+
+### Iterator
+
+- 出现背景：因为有迭代器，容器的遍历可以不考虑其存储结构，用迭代器的统一接口完成遍历.
+
+- 注意点：迭代的时候能够删除节点，但是不能新增节点，否则会抛出 `ConcurrentModifyException` 
+- 使用
+
 ```java
-enum Week{
-	Monday, Tuesday
-}
+  Iterator iterator = list.iterator();
+  while(iterator.hasNext()) {
+    int i = (int) iterator.next();
+    System.out.println(i + "");
+  }
 ```
+
+- 实现原理：
+
 ```java
-/**
- * 一个enum除了不能继承自一个enum之外(编译器不让)，我们基本上可以将enum看作一个常规的类。也就是说我们可以向enum中添加方法。
- *
- * 生成的CustomEnum自动继承自Enum<CustomEnum>，所以我们不能再继承Enum了，单继承。
- * Created by samwangzhibo on 2019/3/21.
- */
-
-public enum CustomEnum {
-    Normal("平常", 1) {
-        @Override
-        String getInfo() {
-            return "平常信息";
+  protected int limit = ArrayList.this.size;
+        int cursor;       // 表示下一个要访问的元素的索引，从next()方法的具体实现就可看出
+        int lastRet = -1; // 表示上一个访问的元素的索引; -1 if no such
+        int expectedModCount = modCount; //表示对ArrayList修改次数的期望值，它的初始值为modCount。
+        public boolean hasNext() {
+                    //如果没超出limit
+                    return cursor < limit;
         }
-    }, High("高", 2) {
-        @Override
-        String getInfo() {
-            return "高信息";
+
+        public E next() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            int i = cursor;
+            if (i >= limit)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
         }
-    }, Low("低", 3) {
-        @Override
-        String getInfo() {
-            return "低信息";
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+                limit--;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
         }
-    };
-
-    private String description;
-    private int value;
-
-    CustomEnum(String description, int value) {
-        this.description = description;
-        this.value = value;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    /**
-     * 抽象方法，类没有生命成abstract 编译器会自动生成abstract
-     * Normal High Low 会自动申明匿名内部类
-     * @return
-     */
-    abstract String getInfo();
-
-}
 ```
 
-[深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
-![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+- ConcurrentModifyException：(调用list.remove()方法导致 `modCount` 和 `expectedModCount` 的值不一致。) [Java ConcurrentModificationException异常原因和解决方法](https://www.cnblogs.com/dolphin0520/p/3933551.html)
+  - 单线程环境 ：`remove()` 可以使用 直接操作 `list` 的话 会导致 `modCount` 和 `expectedModCount`不一致
+  - 多线程环境 `remove()`不能使用，因为不同线程遍历的时候生成了不同的 `Iterator`，也就是 `expectModCount` 是私有的，但是 `modCount` 是共有的，一个线程把 `modCount++` 了，另一个线程的 `expectModCount` 并不知道
+  - 如何解决 1.在使用iterator迭代的时候使用synchronized或者Lock进行同步； 2.使用并发容器CopyOnWriteArrayList代替ArrayList和Vector。
 
 
 
 
-### <a id="范型">范型</a>
 
-- 背景：如果没有范型，比如
-
+[Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
 
 
 
+
+
+
+
+
+
+
+
+### 图片相关
+
+#### Gif图的加载
+
+- 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+
+
+
+###  <a id="View相关">View相关</a>
+
+####  `invalidate`原理
+
+`View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
+
+
+
+
+
+### `volatile`
+
+(背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，lock之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
