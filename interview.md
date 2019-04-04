@@ -6,6 +6,7 @@
 -  [动态代理](#动态代理)
 -  [枚举](#枚举)
 -  [范型](#范型)
+-  [容器](#容器)
 -  [异常](#异常)
 -  [线程](#线程)
   + [Thread类](#Thread类)
@@ -22,11 +23,11 @@
 ---
 ### <a id="内存模型">0. JVM内存模型</a>
 
-| Java堆：存对象，gc最重要的区域 分为年轻代、年老代和永久代 | （Program Counter）程序计数器:无OOM            |
-| --------------------------------------------------------- | ---------------------------------------------- |
-|                                                           | 虚拟机栈：方法，异常Outofmemory和stackoverflow |
-| 方法区：静态常量、class类描述、常量池                     | 本地方栈：native方法                           |
-| **线程共享**                                              | **线程私有**                                   |
+| Java堆：存对象，gc最重要的区域 分为年轻代、年老代和永久代 | （Program Counter）程序计数器  一小块内存区域 记录字节码执行 的位置  比如线程切换回来的时候，找到执行入口  特点:无OOM |
+| --------------------------------------------------------- | ------------------------------------------------------------ |
+|                                                           | 虚拟机栈：方法 栈帧  局部变量 入参，异常Outofmemory和stackoverflow |
+| 方法区：静态常量、class类描述、常量池                     | 本地方栈：native方法                                         |
+| **线程共享**                                              | **线程私有**                                                 |
 
 - **GC背景**: `System.gc()` 建议jvm gc，在gc之前会调用对象的 `finalized()`
 
@@ -262,9 +263,38 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
+### <a id="容器">容器</a>
+
+`HashMap`
+
+ - 简介
+    - 数据结构 数组+链表 默认大小16，上限2^31，扩容因子0.75，容量加倍
+       - 优化：如果知道使用的个数，能够指定一个值，以免不必要的扩容
+       - Entry里面有K、V、next
+- **put操作**：对象的 `hashcode`除以length取余，这个优化是与数组 `(length-1)` 做按位 `&`，然后冲突之后就使用**头插法(1.7)** 把当前节点插到头部(可能是为了Lru的考虑)
+- **版本特性**：当冲突个数达到8个，链表转变成红黑树
+- 线程不安全：
+  - `resize` 扩容死循环
+    - 原因：??
+  - Fast fail 策略，迭代的时候，做了操作， 修改了modCount的值
+    - 解决：使用`CopyOnWriteArrayList`
+- 线程安全的Map
+
+
+
+`ConcurrentHashMap`
+
+- 1,7版本
+  - 使用的16个 `Segment`，每个 `Segment`是一个`ReentrantLock`重入锁，锁一块的时候，不会影响其他块，提高写性能
+- 1.8版本 
+  - initTable 扩容等操作使用 `CAS`无锁机制(缺点cpu 100%)
+  - 直接锁冲突头结点的元素
+
+
+
 ### <a id="枚举">枚举</a>
 
-通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
+通过 `enum` 关键字声明，实际上会生成一个继承 `Enum 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
 
 ```java
 enum Week{
@@ -332,9 +362,9 @@ public enum CustomEnum {
 ### <a id="线程">线程</a>
 
 #### <a id="Thread">Thread类</a>
-- sleep：暂停当前正在执行的线程；不释放锁（类方法）
-- yield：释放当前线程CPU时间片，让他回到就绪状态，并执行其他线程；（类方法）
-- join：暂停调用线程，等该线程终止之后再执行当前线程；
+- sleep：暂停当前正在执行的线程；不释放锁（有限等待、native方法）
+- yield：释放当前线程CPU时间片，让他回到就绪状态，并执行其他线程；（native方法）
+- join：暂停调用线程，等该线程终止之后再执行当前线程；(有限等待、用的wait实现)
 
 ```java
 Thread thread1 = new Thread();
@@ -347,14 +377,18 @@ Thread thread2 = new Thread(){
 
 
 
-- interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；
+- interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；(native)
+
+  **Ps**：如果线程不能获取锁，`Interrupt` 没有反应
 
 #### <a id="Object类">Object类</a>
+
 锁池：存放竞争锁的线程
-等待池：等待线程，当被唤醒的时候，会进入锁池
+等待池：等待线程，当被唤醒的时候，会进入锁池(wait-set)
+
 - wait：暂停当前正在执行的线程，直到调用notify()或notifyAll()方法或超时，退出等待状态；(需要先获得锁)
-- notify：唤醒在该对象上等待的一个线程；(需要先获得锁) 
->需要注意的是，notify只会随机唤醒一个线程，如果线程
+- notify：唤醒在该对象上等待的一个线程；(需要先获得锁 synchronized) 
+>需要注意的是，notify只会随机唤醒一个线程，如果其他线程没有被notify，会导致线程饥饿
 - notifyAll：唤醒在该对象上等待的所有线程；(需要先获得锁)
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
