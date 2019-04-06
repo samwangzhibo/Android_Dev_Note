@@ -8,6 +8,11 @@
 -  [范型](#范型)
 -  [容器](#容器)
 -  [异常](#异常)
+
+---
+
+
+
 -  [线程](#线程)
   + [Thread类](#Thread类)
   + [Object类](#Object类)
@@ -267,28 +272,48 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 `HashMap`
 
- - 简介
-    - 数据结构 数组+链表 默认大小16，上限2^31，扩容因子0.75，容量加倍
+ - **数据结构**
+
+    -  数组+链表 默认大小16，上限2^31，扩容因子0.75，容量加倍
        - 优化：如果知道使用的个数，能够指定一个值，以免不必要的扩容
        - Entry里面有K、V、next
+
 - **put操作**：对象的 `hashcode`除以length取余，这个优化是与数组 `(length-1)` 做按位 `&`，然后冲突之后就使用**头插法(1.7)** 把当前节点插到头部(可能是为了Lru的考虑)
-- **版本特性**：当冲突个数达到8个，链表转变成红黑树
-- 线程不安全：
-  - `resize` 扩容死循环
-    - 原因：??
-  - Fast fail 策略，迭代的时候，做了操作， 修改了modCount的值
+
+- **1.8版本特性**：
+
+    - **查询性能**：转树，当冲突个数达到8个，链表转变成红黑树(二叉平衡树)，查找时间复杂度O(lgn)
+    - **死循环解决**，尾插法
+
+- **线程不安全：**
+
+  - **数据脏写** 同时读 同时写 如果同时写到链表头 有一个修改就丢弃了
+
+  - `resize` **扩容死循环**
+
+    - 原因：`resize` `transfer`
+
+      ![image-20190406125940779](/Users/didi/Library/Application Support/typora-user-images/image-20190406125940779.png)
+
+    - 解决：[老生常谈，HashMap的死循环](<https://juejin.im/post/5a66a08d5188253dc3321da0#heading-1>)
+  - **Fast fail 策略**，迭代的时候，做了操作， 修改了modCount的值
+
     - 解决：使用`CopyOnWriteArrayList`
-- 线程安全的Map
+
+- **线程安全的Map**
 
 
 
 `ConcurrentHashMap`
 
-- 1,7版本
+- 修改了迭代器没有使用modCount
+
+- 1.7版本
   - 使用的16个 `Segment`，每个 `Segment`是一个`ReentrantLock`重入锁，锁一块的时候，不会影响其他块，提高写性能
 - 1.8版本 
   - initTable 扩容等操作使用 `CAS`无锁机制(缺点cpu 100%)
   - 直接锁冲突头结点的元素
+- **读操作没有锁**  [怎么保证读到的不是脏数据?](<https://juejin.im/entry/5b98b89bf265da0abd35034c>)  `volatile` 保证**可见性**、**有序性**
 
 
 
@@ -357,6 +382,8 @@ public enum CustomEnum {
 [深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
 ![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
+---
+
 
 
 ### <a id="线程">线程</a>
@@ -379,6 +406,8 @@ Thread thread2 = new Thread(){
 
 - interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；(native)
 
+  如果线程正在运行，interrupt方法只会设置标志位，如果线程阻塞状态，将会抛出`interruptedException`
+
   **Ps**：如果线程不能获取锁，`Interrupt` 没有反应
 
 #### <a id="Object类">Object类</a>
@@ -387,14 +416,17 @@ Thread thread2 = new Thread(){
 等待池：等待线程，当被唤醒的时候，会进入锁池(wait-set)
 
 - wait：暂停当前正在执行的线程，直到调用notify()或notifyAll()方法或超时，退出等待状态；(需要先获得锁)
+
+  > 限时等待锁被占了
 - notify：唤醒在该对象上等待的一个线程；(需要先获得锁 synchronized) 
 >需要注意的是，notify只会随机唤醒一个线程，如果其他线程没有被notify，会导致线程饥饿
 - notifyAll：唤醒在该对象上等待的所有线程；(需要先获得锁)
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
+
 <a id="线程生命周期">线程生命周期</a>
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
-
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404163529864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ### <a id="ThreadLocal">ThreadLocal</a>
 ThreadLocal类
 
@@ -409,7 +441,7 @@ ThreadLocal类
 
 (背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，lock之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
-
+![image-20190404165446591](/Users/didi/Library/Application Support/typora-user-images/image-20190404165446591.png)
 
 ### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
 > - 技术点：final、finally、finalize()
