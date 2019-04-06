@@ -1,3 +1,5 @@
+Java基础
+
 -  [JVM内存模型](内存模型)
 -  [注解](#1.注解)
     -  [`getAnnotation` 过程](#getAnnotation的流程)
@@ -11,15 +13,22 @@
 
 ---
 
-
+Java并发编程
 
 -  [线程](#线程)
-  + [Thread类](#Thread类)
-  + [Object类](#Object类)
-  + [线程的生命周期](#线程生命周期)
+  + [Thread类(sleep、join、yield、interrupt)](#Thread类)
+  + [Object类(wait、notify、notifyAll)](#Object类)
+  + [线程的生命周期(新建、就绪，阻塞(等待)、运行、终止](#线程生命周期)
 -  [ThreadLocal](#ThreadLocal)
+-  [Synchronized](#Synchronized)
+-  [ReentraintLock](#ReentraintLock)
 -  [volatile](#volatile)
 -  [线程池](#线程池)
+
+---
+
+
+
 -  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 -  [kotlin](#kotlin)
 -  [布局优化](#布局优化)
@@ -53,7 +62,12 @@
 
 ### <a id="1.注解">1.注解</a>
 
+- 背景
+
 注解的引入主要是为了和代码紧耦合的添加注释信息，java中常见的注解有@Override、@Deprecated，用Override修饰的方法，在编译的时候会去检查是否是父类存在这个方法，然后编译器提示。
+
+- 使用
+
 注解我们使用的时候是这样声明的，其中上面的 `@Retention` 和 `@Target` 是元注解。 `@Retention` 主要是用于修饰注解的的运行时机，是在运行时还是编译时。`@Target` 用于修饰注解修饰的域，是类还是成员变量还是方法。
 
 ```java
@@ -71,6 +85,9 @@ void a();
 (Path(getMethod("a").getAnnotation(Path.class))) .value();
 ```
 可以看到实际上注解是一个接口，`Method`有一个成员变量map<<? extends Annotation>, Annotations> ，我们通过Method的getAnnotation方法获取注解，再通过value()方法获取我们注解的时候设置的value属性值。因为Method、Construcator、Class等其实都是集成自 `AnnotatedElement` 这个接口，里面有 `getAnnotation` 方法，所以他们都可以获取注解。
+
+- 原理
+
 ![AnnotationElement的继承结构](https://img-blog.csdnimg.cn/20190307221124191.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 他们之所以能获取注解，实际上编译器会在编译时会把注解信息写入class里面 `Method` 的属性表，然后我们调用 `getAnnotation` 去获取注解，首先是判断本地有没有 `annotations` 这个成员变量。没有的话，实际上是生成继承至这个注解接口的动态代理对象，然后这里面会实例化一个 `annotationInvocationHandler` 对象，通过注解解析器去解析字节码里面的属性表，维护到这个 `annotationInvocationHandler`里面的 Map<key, value>。然后调用  `value` 方法的时候，判断Method 的名字 `value` 交给 `invocationHandler`，然后去 `InvocationHandler` 里面去取数据。
 
@@ -388,10 +405,16 @@ public enum CustomEnum {
 
 ### <a id="线程">线程</a>
 
-#### <a id="Thread">Thread类</a>
+#### <a id="Thread">Thread类(sleep、join、yield、interrupt)</a>
 - sleep：暂停当前正在执行的线程；不释放锁（有限等待、native方法）
+
 - yield：释放当前线程CPU时间片，让他回到就绪状态，并执行其他线程；（native方法）
+
 - join：暂停调用线程，等该线程终止之后再执行当前线程；(有限等待、用的wait实现)
+
+  > - join如何阻塞调用的当前线程？
+  >
+  > 获取线程的`lock`锁，调用`wait()`，等线程执行完之后 JVM调用该线程的lock对象的`notify()`
 
 ```java
 Thread thread1 = new Thread();
@@ -406,27 +429,35 @@ Thread thread2 = new Thread(){
 
 - interrupt：中断该线程，当线程调用wait(),sleep(),join()或I/O操作时，将收到InterruptedException或 ClosedByInterruptException；(native)
 
-  如果线程正在运行，interrupt方法只会设置标志位，如果线程阻塞状态，将会抛出`interruptedException`
+  >  如果线程正在运行，interrupt方法只会设置标志位，如果线程阻塞状态，将会抛出`interruptedException`
+  >
+  >  **注意**：如果线程在`wait`状态，并且不能获取锁，`Interrupt` 没有反应
 
-  **Ps**：如果线程不能获取锁，`Interrupt` 没有反应
-
-#### <a id="Object类">Object类</a>
+#### <a id="Object类">Object类(wait、notify、notifyAll)</a>
 
 锁池：存放竞争锁的线程
 等待池：等待线程，当被唤醒的时候，会进入锁池(wait-set)
 
 - wait：暂停当前正在执行的线程，直到调用notify()或notifyAll()方法或超时，退出等待状态；(需要先获得锁)
 
-  > 限时等待锁被占了
+  > **重点**: 调用`wait()`，立马释放锁，线程拥塞
+
+  > - 限时等待时，锁被占了，还能恢复吗？
+  >
+  > 不能，限时等待的前提是线程要能获得锁，这一点和 `interrupt` 方法很像，如果当前线程`wait`，并且不能获取锁，那么不能抛出 `interrupt` 异常
 - notify：唤醒在该对象上等待的一个线程；(需要先获得锁 synchronized) 
->需要注意的是，notify只会随机唤醒一个线程，如果其他线程没有被notify，会导致线程饥饿
+>**注意**：notify只会随机唤醒一个线程，如果其他线程没有被notify，会导致线程饥饿
+>
+>notify只是唤醒其他线程，其他线程的执行需要等到方法执行完之后释放锁才行。
 - notifyAll：唤醒在该对象上等待的所有线程；(需要先获得锁)
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
 
-<a id="线程生命周期">线程生命周期</a>
+<a id="线程生命周期">线程生命周期(新建、就绪、阻塞(运行) 、运行、终止)</a>
+
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404163529864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
 ### <a id="ThreadLocal">ThreadLocal</a>
 ThreadLocal类
 
@@ -443,7 +474,45 @@ ThreadLocal类
 
 ![image-20190404165446591](/Users/didi/Library/Application Support/typora-user-images/image-20190404165446591.png)
 
+
+
+### <a id="线程池">线程池</a>
+
+
+
+`execute和submit的区别？`
+
+- 参数不同
+
+  - `void execute(Runnable command)` 提交的是 `Runnable`。
+
+  - ` <T> Future<T> submit(Callable<T> task)`  提交一个实现了Callable接口的对象，而Callable接口中是一个有返回值的call方法，当主线程调用Future的get方法的时候会获取到从线程中返回的结果数据，如果在线程的执行过程中发生了异常，get会获取到异常的信息。
+
+  - ```java
+    public <T> Future<T> submit(Callable<T> task) {
+        if (task == null) throw new NullPointerException();
+        RunnableFuture<T> ftask = newTaskFor(task);
+        execute(ftask);
+        return ftask;
+    }
+    
+    public interface Callable<V> {
+        /**
+         * Computes a result, or throws an exception if unable to do so.
+         *
+         * @return computed result
+         * @throws Exception if unable to compute a result
+         */
+        V call() throws Exception;
+    }
+    ```
+
+---
+
+
+
 ### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
+
 > - 技术点：final、finally、finalize()
 > - 参考回答：
 > * final关键字表示不可更改，具体体现在：
@@ -505,36 +574,6 @@ ThreadLocal类
 >   - volatile： 本身就包含了禁止指令重排序的语义
 >   - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
 >    [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
-
-
-### <a id="线程池">线程池</a>
-
-`execute和submit的区别`
-
-- 参数不同
-
-  - `void execute(Runnable command)` 提交的是 `Runnable`。
-
-  - ` <T> Future<T> submit(Callable<T> task)`  提交一个实现了Callable接口的对象，而Callable接口中是一个有返回值的call方法，当主线程调用Future的get方法的时候会获取到从线程中返回的结果数据，如果在线程的执行过程中发生了异常，get会获取到异常的信息。
-
-  - ```java
-    public <T> Future<T> submit(Callable<T> task) {
-        if (task == null) throw new NullPointerException();
-        RunnableFuture<T> ftask = newTaskFor(task);
-        execute(ftask);
-        return ftask;
-    }
-    
-    public interface Callable<V> {
-        /**
-         * Computes a result, or throws an exception if unable to do so.
-         *
-         * @return computed result
-         * @throws Exception if unable to compute a result
-         */
-        V call() throws Exception;
-    }
-    ```
 
 
 
