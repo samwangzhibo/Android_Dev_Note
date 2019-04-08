@@ -21,11 +21,28 @@ Java并发编程
   + [线程的生命周期(新建、就绪，阻塞(等待)、运行、终止](#线程生命周期)
 -  [ThreadLocal](#ThreadLocal)
 -  [Synchronized](#Synchronized)
--  [ReentraintLock](#ReentraintLock)
+-  [ReentrantLock](#ReentrantLock)
 -  [volatile](#volatile)
+-  [cas](#cas)
 -  [线程池](#线程池)
 
 ---
+
+Android
+
+- Handler
+- Binder
+- App启动过程
+- View绘制过程
+- TouchEvent事件分发
+- ListView、RecyclerView
+- 滚动机制(Scroll、Fling)
+- 动画机制(Drawable Animation、View Animation、Property Animation)
+
+- 性能调优
+  - 布局优化
+  - 启动优化
+  - 绘制优化
 
 
 
@@ -50,7 +67,7 @@ Java并发编程
   - 2.可达性分析 
     -  GRoot 静态对象、常量池对象
 - 分代回收
-  - **新生代**： 一个eden区，两个存活区。Eden满后，把存活的对象复制到存活区。存活区满后，把仍存活的对象复制到另一个存活区，这个也满了后，仍存活的复制到另一个存活区。
+  - **新生代**： 一个eden区，两个存活区。Eden满后，把存活的对象复制到存活区。存活区满后，把仍存活的对象复制到另一个存活区，这个也满了后，仍存活的复制到另一个存活区。**一次只有一个存活区**
     - young gc：停止复制算法stop-the-world 
        ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404012731306.png)
   - **年老代** ：young gc几次（默认8次，可调参）后仍存活的复制到年老代、大对象存年老代
@@ -77,7 +94,7 @@ Java并发编程
 	String value() defalut "";
 }
 ```
-然后使用的时候我们是这样的，用注解去注释方法，然后通过Method的`getAnnotation` 方法获取注解，然后通过 `value()` 方法获取 `value` 属性。
+然后使用的时候我们是这样的，用注解去注释方法，然后通过**Method**的`getAnnotation` 方法获取注解，然后通过 `value()` 方法获取 `value` 属性。
 ```java
 @Path("/aaa")
 void a();
@@ -101,14 +118,14 @@ void a();
 ![动态代理与invocationHandler](https://img-blog.csdnimg.cn/20190403123142530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
 ### <a id="内部类">2. 内部类</a>
-内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，不允许除外部类外的其他类访问它；根据内部类定义的位置，可以分为几类。
--  成员内部类
+内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，**不允许除外部类外的其他类访问它**；根据内部类定义的位置，可以分为几类。
+-  **成员内部类**
   能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
--  静态内部类
+-  **静态内部类**
   能够访问外围类的静态变量和静态方法，包括私有属性的。静态内部类是指被声明为static的内部类，可不依赖外部类实例化；
--  局部内部类
+-  **局部内部类**
    访问方法的变量需要使用 `final` 修饰，因为参数在方法调用完之后就出栈了，那么内部类就不能访问到这个变量了。用final申明变量，如果是基础类型，会直接变成值，如果是引用类型，会通过构造函数传进来。
--  匿名内部类
+-  **匿名内部类**
   不能用权限修饰符修饰，局部内部类和匿名内部类都默认持有外部类的引用。一般android中，我们为了防止 `Activity` 内存泄露，都是把匿名内部类声明成静态内部类，然后传递Activity的 WeakReference。
 
 [java提高篇(十)-----详解匿名内部类https://www.cnblogs.com/chenssy/p/3390871.html](https://www.cnblogs.com/chenssy/p/3390871.html)
@@ -297,11 +314,6 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 - **put操作**：对象的 `hashcode`除以length取余，这个优化是与数组 `(length-1)` 做按位 `&`，然后冲突之后就使用**头插法(1.7)** 把当前节点插到头部(可能是为了Lru的考虑)
 
-- **1.8版本特性**：
-
-    - **查询性能**：转树，当冲突个数达到8个，链表转变成红黑树(二叉平衡树)，查找时间复杂度O(lgn)
-    - **死循环解决**，尾插法
-
 - **线程不安全：**
 
   - **数据脏写** 同时读 同时写 如果同时写到链表头 有一个修改就丢弃了
@@ -317,6 +329,11 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
     - 解决：使用`CopyOnWriteArrayList`
 
+- **1.8版本特性**：
+
+    - **查询性能**：转树，当冲突个数达到8个，链表转变成红黑树(二叉平衡树)，查找时间复杂度O(lgn)
+    - **死循环解决**，尾插法
+
 - **线程安全的Map**
 
 
@@ -328,7 +345,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 - 1.7版本
   - 使用的16个 `Segment`，每个 `Segment`是一个`ReentrantLock`重入锁，锁一块的时候，不会影响其他块，提高写性能
 - 1.8版本 
-  - initTable 扩容等操作使用 `CAS`无锁机制(缺点cpu 100%)
+  - **CAS操作**：initTable  transfer(扩容)等操作使用  `CAS`无锁机制(缺点cpu 100%)
   - 直接锁冲突头结点的元素
 - **读操作没有锁**  [怎么保证读到的不是脏数据?](<https://juejin.im/entry/5b98b89bf265da0abd35034c>)  `volatile` 保证**可见性**、**有序性**
 
@@ -401,6 +418,34 @@ public enum CustomEnum {
 
 ---
 
+### `Q：什么是线程安全？保障线程安全有哪些手段？`
+
+> 技术点：线程安全
+>
+> 思路：详见[要点提炼| 理解JVM之线程安全&锁优化](https://www.jianshu.com/p/ca8801044352) 
+>
+> 参考回答：线程安全就是当多个线程访问一个对象时，如果不用考虑这些线程在运行时环境下的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那这个对象是线程安全的。保证线程安全可从多线程三特性出发： 
+>
+> - 原子性
+>
+> （Atomicity）：单个或多个操作是要么全部执行，要么都不执行 
+>
+> - Lock：保证同时只有一个线程能拿到锁，并执行申请锁和释放锁的代码
+> - synchronized：对线程加独占锁，被它修饰的类/方法/变量只允许一个线程访问
+> - 可见性
+>
+> （Visibility）：当一个线程修改了共享变量的值，其他线程能够立即得知这个修改 
+>
+> - volatile：保证新值能**立即**同步到主内存，且每次使用前立即从主内存刷新；
+> - synchronized：在释放锁之前会将工作内存新值更新到主存中
+> - 有序性
+>
+> （Ordering）：程序代码按照指令顺序执行 
+>
+> - volatile： 本身就包含了禁止指令重排序的语义
+> - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
+>   [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
+
 
 
 ### <a id="线程">线程</a>
@@ -466,19 +511,132 @@ ThreadLocal类
 - 原理：每个线程的Thread对象中都有一个ThreadLocalMap 对象`ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue)`，它存储了一组以ThreadLocal.threadLocalHashCode为key、以本地线程变量为value的键值对，而ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，也就包含了一个独一无二的threadLocalHashCode值，通过这个值就可以在线程键值值对中找回对应的本地线程变量。
   需要注意的点就是ThreadLocal的Entry使用的是弱引用，是因为ThreadLocal变量会被线程一直持有，容易造成内存泄露 ，所以使用弱引用。
 
+### <a id="Synchronized">synchronized</a>
+
+
+
+
+
+
+
+### 扩展 [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
+
+- 线程饥饿 
+  - 背景
+    - **高优先级线程**占用大多数CPU时间片，低优先级线程饥饿
+    - 线程被永远阻塞在等待同步块的状态(synchronized同步块一直不释放锁)
+    - `notify` 和 `synchronized`  **不保证线程唤醒的顺序**
+  - 解决 **Lock公平锁**
+  - 参考 [线程饥饿](<https://cloud.tencent.com/developer/article/1193092>)
+
+### <a id="ReentrantLock">ReentrantLock</a>
+
+- 背景：`synchronized` 的缺点是 **等待不可中断**、**非公平模式**(可能线程饥饿)、一个 `synchronized` 内部只能使用一个对象 `wait` 
+- 优点
+  - 等待可中断
+  - 公平模式
+  - 一个 `ReentrantLock` 创建多个 `condition`，每个 `condition` 有 `await(等待)` 和 `signal(唤醒)`
+- 使用
+- 原理
+- 扩展
+
+#### ReadWriteLock
+
+
+
 
 
 ### <a id="volatile">`volatile`</a>
 
-(背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，lock之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
+(背景) `volatile` 的引入保证了线程并发的可见性。(使用)被 `volatile` 修饰的变量，线程每次修改之后，都把结果写回主内存，而不是 cpu缓存，然后通知其他线程缓存无效，需要从主内存读取，而不是用cpu缓存，这保证了内存一致性，还有就是 `volatile` 可以禁止指令重排序，重排序是编译器为了优化指令而不影响执行结果做的操作。(例子) `volatile` 经常在单例的 `double check` 中使用。(原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，`lock` 之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
 ![image-20190404165446591](/Users/didi/Library/Application Support/typora-user-images/image-20190404165446591.png)
+
+### <a id="cas">CAS(compare and swap)</a>
+
+- 背景
+
+乐观锁，比 `synchronized` 更轻量级，`synchronized` 涉及到内核状态的线程切换，cas则是通过自旋请求，缺点是CPU占用率高
+
+- 使用
+
+cas中有3个参数，A是变量的地址，B是变量的期待值，C是要设置的值
+
+- 举例
+
+  比如有个变量i=0，A、B 2个线程都做`i++` 操作，这其实涉及到3个操作，`read` `load``use` `assign` `write``store`等原子操作[java并发内存模型以及内存操作规则](<https://blog.csdn.net/l1394049664/article/details/81475380>)，A、B同时读出值为0，然后A修改后值为1，B修改之后还是1，A同步会主内存之后i的值为1，然后B `cas` 操作，第二个参数为0，第三个参数为1，由于第二个参数预期的值0和内存的值1不一样，所以 `cas` 设置是失败，自旋重试，然后就设置上了.
+
+- 原理
+
+由于compareAndSwap是`Unsafe`包里面的，这个操作CPU保证的原子指令
 
 
 
 ### <a id="线程池">线程池</a>
 
+- 背景：线程池主要是为了解决频繁创建线程的CPU和资源开销，还可以控制最大的线程数量，核心的线程数量，回收线程，队列化的处理，还有拒绝策略
+- 使用：核心线程数，最大线程数，回收时间、拥塞队列、线程工厂、拒绝Handler
 
+```java
+public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue<Runnable> workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler)
+```
+
+- 例子
+
+**FixThreadPool：**定长线程池，全是**核心**线程，快速处理
+
+```java
+ public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
+    }
+```
+
+使用的 `LinkedBlockingQueue`，默认是 `Integer.Max`的队列长度，`LinkedBlockingQueue` 的底层实现用的`ReentarintLock` 和 `Condition`，这是一个**生产者消费者**问题，当队列满的时候，阻塞生产者的 `put`操作(用的condition的await())，唤醒消费者去 `take`(用的condition的`signal`)， 当队列空的时候，阻塞消费者的 `take`， 通知生产者 `put`。
+
+**SingleThreadPool：**只有**一个核心**线程，请求同步执行，适合同步非耗时请求
+
+```java
+new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue<Runnable>())
+```
+
+**CacheThreadPool：**缓存线程池，没有核心线程，都是**非核心**线程，适合处理高频非耗时请求
+
+```java
+new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>());
+```
+
+
+
+> **特殊**：队列使用的是 `SynchronousQueue`，这个队列的特点是大小为0，**取操作之后才能放**
+>
+> 为什么使用这个队列？因为 `ThreadPoolExecutor`的策略，先是判断核心线程，这个队列核心线程数为0，则判断队列，队列也为0 ，所以就创建非核心线程，然后非核心线程就需要超时回收。
+
+**ScheduledThreadPool**：核心线程数量**固定**，非核心线程数量**不定**；可进行**定时**任务和**固定**周期的任务。
+
+```java
+ super(corePoolSize, Integer.MAX_VALUE,
+              DEFAULT_KEEPALIVE_MILLIS, MILLISECONDS,
+              new DelayedWorkQueue());
+```
+
+> ```java
+> scheduledThreadPool.schedule(runnable, 1, TimeUnit.SECONDS); //1s之后执行
+> //1s之后执行，每隔1s执行一次
+> scheduledThreadPool.scheduleAtFixedRate(runnable, 1, 1, TimeUnit.SECONDS);
+> ```
+>
+> 实现：使用 **DelayWorkQueue**
+
+额外
 
 `execute和submit的区别？`
 
@@ -486,7 +644,7 @@ ThreadLocal类
 
   - `void execute(Runnable command)` 提交的是 `Runnable`。
 
-  - ` <T> Future<T> submit(Callable<T> task)`  提交一个实现了Callable接口的对象，而Callable接口中是一个有返回值的call方法，当主线程调用Future的get方法的时候会获取到从线程中返回的结果数据，如果在线程的执行过程中发生了异常，get会获取到异常的信息。
+  - ` <T> Future<T> submit(Callable<T> task)`  提交一个实现了Callable接口的对象，而Callable接口中是一个有返回值的call方法，当主线程调用**Future的 `get` **方法的时候会获取到从线程中返回的**结果**数据，如果在线程的执行过程中发生了异常，get会获取到**异常**的信息。
 
   - ```java
     public <T> Future<T> submit(Callable<T> task) {
@@ -507,7 +665,26 @@ ThreadLocal类
     }
     ```
 
+- 描述
+
+`execute` 和  `submit` 的参数不同，`execute` 的参数是 `Runnable`， 没有返回值，而`submit` 的参数是 `Callback`，其中有个 `call` 方法可以返回值，然后 `submit` 返回一个`Future` 对象，`Future`对象的`get` 方法可以获取值还能捕获异常
+
 ---
+
+Android
+
+### Handler
+
+
+
+#### epoll
+
+```c++
+epoll_create()
+  
+```
+
+
 
 
 
@@ -543,40 +720,6 @@ ThreadLocal类
 
 
 
-
-
-### `Q：什么是线程安全？保障线程安全有哪些手段？`
-
->  技术点：线程安全
->
->  思路：详见[要点提炼| 理解JVM之线程安全&锁优化](https://www.jianshu.com/p/ca8801044352) 
->
->  参考回答：线程安全就是当多个线程访问一个对象时，如果不用考虑这些线程在运行时环境下的调度和交替执行，也不需要进行额外的同步，或者在调用方进行任何其他的协调操作，调用这个对象的行为都可以获得正确的结果，那这个对象是线程安全的。保证线程安全可从多线程三特性出发： 
->
->  - 原子性
->
->  （Atomicity）：单个或多个操作是要么全部执行，要么都不执行 
->
->   - Lock：保证同时只有一个线程能拿到锁，并执行申请锁和释放锁的代码
->   - synchronized：对线程加独占锁，被它修饰的类/方法/变量只允许一个线程访问
->
->  - 可见性
->
->  （Visibility）：当一个线程修改了共享变量的值，其他线程能够立即得知这个修改 
->
->   - volatile：保证新值能**立即**同步到主内存，且每次使用前立即从主内存刷新；
->   - synchronized：在释放锁之前会将工作内存新值更新到主存中
->
->  - 有序性
->
->  （Ordering）：程序代码按照指令顺序执行 
->
->   - volatile： 本身就包含了禁止指令重排序的语义
->   - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
->    [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
-
-
-
 ### <a id="异常">异常</a>
 
 - 分类
@@ -585,10 +728,10 @@ ThreadLocal类
     - 例子：`StackOverFlowError` `OutOfMemoryError`
   -  Exception
     - 执行异常（RuntimeException）
-      - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都无需在`throws`子句中进行声明
+      - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都**无需在`throws`**子句中进行声明
       - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException` `ConcurrentModifyException`
     - 检查异常（Checked Exceptions）
-      - 特点：一个方法必须通过throws语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
+      - 特点：一个方法**必须通过throws**语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
       - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
 
 
@@ -601,7 +744,10 @@ ThreadLocal类
 
 ### RecyclerView
 
-
+- 相对于ListView优点
+  - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
+  - 支持单个Item刷新
+  - 
 
 [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
