@@ -608,16 +608,128 @@ ThreadLocal类
 ### <a id="ReentrantLock">ReentrantLock</a>
 
 - 背景：`synchronized` 的缺点是 **等待不可中断**、**非公平模式**(可能线程饥饿)、一个 `synchronized` 内部只能使用一个对象 `wait` 
+
 - 优点
+
   - 等待可中断
   - 公平模式
   - 一个 `ReentrantLock` 创建多个 `condition`，每个 `condition` 有 `await(等待)` 和 `signal(唤醒)`
+
 - 使用
 
+  - 等待可中断 `lockInterruptibly()`  限时等待 `tryLock()` 解决死锁
+  - 公平模式 `new ReentrantLock(true)`
+  - 多个condition
 
+  ```java
+  ReentrantLock lock = new ReentrantLock();
+  Condition notEmpty = lock.newCondition();
+  public static void main(String[] args) throws InterruptedException {
+          lock.lock();
+          new Thread(new SignalThread()).start();
+          System.out.println("主线程等待通知");
+          try {
+              condition.await();
+          } finally {
+              lock.unlock();
+          }
+          System.out.println("主线程恢复运行");
+      }
+      static class SignalThread implements Runnable {
+  
+          @Override
+          public void run() {
+              lock.lock();
+              try {
+                  condition.signal();
+                  System.out.println("子线程通知");
+              } finally {
+                  lock.unlock();
+              }
+          }
+      }
+  ```
 
-- 原理
+  ```java
+  //reentrantLock实现阻塞队列
+  public class MyBlockingQueue<E> {
+  
+      int size;//阻塞队列最大容量
+  
+      ReentrantLock lock = new ReentrantLock();
+  
+      LinkedList<E> list=new LinkedList<>();//队列底层实现
+  
+      Condition notFull = lock.newCondition();//队列满时的等待条件
+      Condition notEmpty = lock.newCondition();//队列空时的等待条件
+  
+      public MyBlockingQueue(int size) {
+          this.size = size;
+      }
+  
+      public void enqueue(E e) throws InterruptedException {
+          lock.lock();
+          try {
+              while (list.size() ==size)//队列已满,在notFull条件上等待
+                  notFull.await();
+              list.add(e);//入队:加入链表末尾
+              System.out.println("入队：" +e);
+              notEmpty.signal(); //通知在notEmpty条件上等待的线程
+          } finally {
+              lock.unlock();
+          }
+      }
+  
+      public E dequeue() throws InterruptedException {
+          E e;
+          lock.lock();
+          try {
+              while (list.size() == 0)//队列为空,在notEmpty条件上等待
+                  notEmpty.await();
+              e = list.removeFirst();//出队:移除链表首元素
+              System.out.println("出队："+e);
+              notFull.signal();//通知在notFull条件上等待的线程
+              return e;
+          } finally {
+              lock.unlock();
+          }
+      }
+  }
+  ```
+
+  
+
+- 和 `synchronized` 比较
+
+  | 名称          | 相同点                                   | 不同点                                               |
+  | ------------- | ---------------------------------------- | ---------------------------------------------------- |
+  | ReentrantLock | 独占锁,只允许线程互斥的访问临界区 可重入 | 1.手动加锁和解锁 2.公平锁 3.等待中断 4.多个condition |
+  | Synchronized  |                                          | synchronized加锁解锁的过程是隐式的                   |
+
+- 原理 [从源码角度彻底理解ReentrantLock(重入锁)](https://www.cnblogs.com/takumicx/p/9402021.html)
+
+  AbstractQueuedSynchronizer
+
+  - 进入队列 `CAS`
+
+  - 阻塞 `LockSupport`
+
+    ```java
+    private final boolean parkAndCheckInterrupt() {
+        LockSupport.park(this);
+        return Thread.interrupted();
+    }
+    ```
+
+  - 唤醒
+
+    ```java
+     LockSupport.unpark(s.thread);
+    ```
+
 - 扩展
+
+- 参考 [ReentrantLock(重入锁)功能详解和应用演示](https://www.cnblogs.com/takumicx/p/9338983.html)
 
 #### ReadWriteLock
 
