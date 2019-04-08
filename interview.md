@@ -1,4 +1,4 @@
-Java基础
+**Java基础**
 
 -  [JVM内存模型](内存模型)
 -  [注解](#1.注解)
@@ -13,7 +13,7 @@ Java基础
 
 ---
 
-Java并发编程
+**Java并发编程**
 
 -  [线程](#线程)
   + [Thread类(sleep、join、yield、interrupt)](#Thread类)
@@ -28,7 +28,7 @@ Java并发编程
 
 ---
 
-Android
+**Android**
 
 - Handler
 - Binder
@@ -431,6 +431,7 @@ public enum CustomEnum {
 > （Atomicity）：单个或多个操作是要么全部执行，要么都不执行 
 >
 > - Lock：保证同时只有一个线程能拿到锁，并执行申请锁和释放锁的代码
+>
 > - synchronized：对线程加独占锁，被它修饰的类/方法/变量只允许一个线程访问
 > - 可见性
 >
@@ -444,7 +445,7 @@ public enum CustomEnum {
 >
 > - volatile： 本身就包含了禁止指令重排序的语义
 > - synchronized：保证一个变量在同一个时刻只允许一条线程对其进行lock操作，使得持有同一个锁的两个同步块只能串行地进入
->   [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
+> [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
 
 
@@ -513,13 +514,36 @@ ThreadLocal类
 
 ### <a id="Synchronized">synchronized</a>
 
+- **背景** 多线程安全的三个特性，原子性（保证线程执行完才能执行其他线程）、可见性（`synchronized执行完之前把工作内存的值写回主存`）、有序性
+
+- **使用**
+
+  - 修饰方法
+    - 静态方法，获取的是方法区 `class` 类文件的锁，所以不影响非静态方法
+    - 非静态方法，获取的是 `this` 的锁
+  - 修饰对象  获取的是对象的`monitor` 监控器
+
+- **特点**  重入锁、悲观锁、独占锁、重量级锁
+
+- **原理**
+
+  `synchronized` 关键字同步的实现依赖于字节码，会在 `synchronized` 同步块的前后适用 `monitorenter` 和 `monitorexit` 指令，`monitorenter` 操作会去获取对象的锁(每个对象头部有一个监控器monitor 对象的头文件)，如果这个对象没被锁或者当前线程已经获得了锁(**重入锁**)，那么monitor的**计数器+1**，如果已经被其他线程锁住了，自旋等待一会最后阻塞，知道其他线程释放锁。执行 `monitorexit` 指令，**计数器-1**，直到计数器为0，释放锁。但是监视器锁本质又是依赖于底层的操作系统的**Mutex Lock**来实现的。
+
+- **适用场景和缺点**
+
+  悲观锁，**多写**的环境，多读的环境用乐观锁。**CPU切换**上下文**内核态和用户态**切换开销，**线程阻塞和唤醒**开销。
+
+- 版本优化
+  - 1.6之后， **偏向锁** 和 **轻量级锁** 。synchronized的底层实现主要依靠 **Lock-Free** 的队列，基本思路是 **自旋后阻塞**，**竞争切换后继续竞争锁**，**稍微牺牲了公平性，但获得了高吞吐量**。在线程冲突较少的情况下，可以获得和CAS类似的性能；而线程冲突严重的情况下，性能远高于CAS。
+- 参考 [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
+
+### 扩展
+
+---
 
 
 
-
-
-
-### 扩展 [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
+#### 1. [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
 
 - 线程饥饿 
   - 背景
@@ -529,6 +553,58 @@ ThreadLocal类
   - 解决 **Lock公平锁**
   - 参考 [线程饥饿](<https://cloud.tencent.com/developer/article/1193092>)
 
+#### 2. 无锁状态、偏向锁、轻量级锁、重量级锁
+
+- 偏向锁
+
+  - 背景：为了在无多线程竞争的情况下尽量**减少不必要的轻量级锁执行路径**
+
+- 轻量级锁
+
+  通过`CAS`操作修改Mark Word锁标志位，如果成功，说明执行代码操作，如果竞争失败，则膨胀为重量级锁，阻塞线程。
+
+- 重量级锁
+
+  - 适用**Mutex Lock**，用户态到内核态的切换
+
+| 锁       | 优点                                                         | 缺点                                             | 适用场景                             |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------ | ------------------------------------ |
+| 偏向锁   | 加锁和解锁不需要额外的消耗，和执行非同步方法比仅存在纳秒级的差距。 | 如果线程间存在锁竞争，会带来额外的锁撤销的消耗。 | 适用于只有一个线程访问同步块场景。   |
+| 轻量级锁 | 竞争的线程不会阻塞，提高了程序的响应速度。                   | 如果始终得不到锁竞争的线程使用自旋会消耗CPU。    | 追求响应时间。同步块执行速度非常快。 |
+| 重量级锁 | 线程竞争不使用自旋，不会消耗CPU。                            | 线程阻塞，响应时间缓慢。                         | 追求吞吐量。同步块执行速度较长。     |
+
+- 优化
+
+  - **适应性自旋（Adaptive Spinning）** 
+
+    ​	线程如果自旋成功了，那么下次自旋的次数会更加多，因为虚拟机认为既然上次成功了，那么此次自旋也很有可能会再次成功，那么它就会允许自旋等待持续的次数更多。反之，如果对于某个锁，很少有自旋能够成功的，那么在以后要或者这个锁的时候自旋的次数会减少甚至省略掉自旋过程，以免浪费处理器资源
+
+  - **锁粗化（Lock Coarsening）** 编译器优化，比如 `StringBuffer` 拼接的时候，扩大锁的范围
+
+  - **锁消除（Lock Elimination）** 编译器优化，如果某个操作只可能被一个线程适用，那么消除锁
+
+- 缺点：
+
+  优化在锁竞争很激烈的情况反而降低了效率，可以通过 `-XX:-UseBiasedLocking` 来禁用偏向锁 
+
+- 参考 [Java并发编程：Synchronized底层优化（偏向锁、轻量级锁）](https://www.cnblogs.com/paddix/p/5405678.html) [**死磕 Java 并发 - 深入分析 synchronized 的实现原理**](https://juejin.im/entry/589981fc1b69e60059a2156a)
+
+![img](https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/consulusion.jpg)
+
+[java锁偏向锁](<https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/>)
+
+### JIT(HotSpot 虚拟机)
+
+- 背景：加速热点代码的运行
+
+- 原理 
+
+  Java程序最初是通过解释器进行解释执行的，当虚拟机发现**某个方法或代码块**运行的**特别频繁**时，就会把这些代码认定为**“热点代码”（Hot Spot Code）**。为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成为**本地平台相关的机器码**，并进行优化，而完成这个任务的编译器称为及时编译器（Just In Time Compiler，简称JIT）。
+
+---
+
+
+
 ### <a id="ReentrantLock">ReentrantLock</a>
 
 - 背景：`synchronized` 的缺点是 **等待不可中断**、**非公平模式**(可能线程饥饿)、一个 `synchronized` 内部只能使用一个对象 `wait` 
@@ -537,6 +613,9 @@ ThreadLocal类
   - 公平模式
   - 一个 `ReentrantLock` 创建多个 `condition`，每个 `condition` 有 `await(等待)` 和 `signal(唤醒)`
 - 使用
+
+
+
 - 原理
 - 扩展
 
@@ -552,15 +631,17 @@ ThreadLocal类
 
 ![image-20190404165446591](/Users/didi/Library/Application Support/typora-user-images/image-20190404165446591.png)
 
-### <a id="cas">CAS(compare and swap)</a>
+### <a id="cas">CAS (compare and swap)</a>
 
 - 背景
 
 乐观锁，比 `synchronized` 更轻量级，`synchronized` 涉及到内核状态的线程切换，cas则是通过自旋请求，缺点是CPU占用率高
 
+- 特点：**乐观锁**
+
 - 使用
 
-cas中有3个参数，A是变量的地址，B是变量的期待值，C是要设置的值
+  cas中有3个参数，A是变量的地址(A的值)，B是变量的期待值，C是要设置的值
 
 - 举例
 
@@ -568,7 +649,23 @@ cas中有3个参数，A是变量的地址，B是变量的期待值，C是要设�
 
 - 原理
 
-由于compareAndSwap是`Unsafe`包里面的，这个操作CPU保证的原子指令
+  由于compareAndSwap是`Unsafe`包里面的，这个操作CPU保证的原子指令
+
+- 使用场景 **多读的应用类型，这样可以提高吞吐量**
+
+- 缺点：
+
+  - ####  [ABA问题](<https://juejin.im/post/5b4977ae5188251b146b2fc8>)  
+
+    - `AtomicStampedReference` 检查当前引用是否等于预期引用，并且当前标志是否等于预期标志
+
+  - 只能保证一个共享变量的原子操作 
+
+    - 多个对象封装到 `AtomicReference类`
+
+  - CPU占比很高、吞吐量很高
+
+- 参考 [面试必备之乐观锁与悲观锁](<https://juejin.im/post/5b4977ae5188251b146b2fc8>)
 
 
 
