@@ -314,6 +314,8 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 - **put操作**：对象的 `hashcode`除以length取余，这个优化是与数组 `(length-1)` 做按位 `&`，然后冲突之后就使用**头插法(1.7)** 把当前节点插到头部(可能是为了Lru的考虑)
 
+- **扩容** 16的倍数扩容 相关因子0.75 
+
 - **线程不安全：**
 
   - **数据脏写** 同时读 同时写 如果同时写到链表头 有一个修改就丢弃了
@@ -712,7 +714,7 @@ ThreadLocal类
 
   - 进入队列 `CAS`
 
-  - 阻塞 `LockSupport`
+  - 阻塞 `LockSupport` 
 
     ```java
     private final boolean parkAndCheckInterrupt() {
@@ -729,11 +731,43 @@ ThreadLocal类
 
 - 扩展
 
-- 参考 [ReentrantLock(重入锁)功能详解和应用演示](https://www.cnblogs.com/takumicx/p/9338983.html)
+- 参考 [ReentrantLock(重入锁)功能详解和应用演示](https://www.cnblogs.com/takumicx/p/9338983.html) [阻塞和唤醒线程——LockSupport功能简介及原理浅析](https://www.cnblogs.com/takumicx/p/9328459.html)
 
 #### ReadWriteLock
 
+### LockSupport
 
+- Why? `wait`、`notify` 的缺点，1.wait和notify使用的时候只能在同步块 2.`notify` 只能唤醒随机的线程，无法唤醒指定线程
+
+- 使用
+
+  ```java
+  public class LockSupportTest {
+  
+      public static void main(String[] args) {
+          Thread parkThread = new Thread(new ParkThread());
+          parkThread.start();
+          System.out.println("开始线程唤醒");
+          LockSupport.unpark(parkThread);
+          System.out.println("结束线程唤醒");
+  
+      }
+  
+      static class ParkThread implements Runnable{
+  
+          @Override
+          public void run() {
+              System.out.println("开始线程阻塞");
+              LockSupport.park();
+              System.out.println("结束线程阻塞");
+          }
+      }
+  }
+  ```
+
+- 原理
+- 特点
+- 缺点
 
 
 
@@ -843,7 +877,7 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 > scheduledThreadPool.scheduleAtFixedRate(runnable, 1, 1, TimeUnit.SECONDS);
 > ```
 >
-> 实现：使用 **DelayWorkQueue**
+> 实现：使用 **[DelayWorkQueue](<https://www.jianshu.com/p/587901245c95>)**，保证添加到队列中的任务，会按照任务的延时时间进行排序，延时时间少的任务首先被获取。
 
 额外
 
