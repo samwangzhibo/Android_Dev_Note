@@ -44,7 +44,11 @@
   - 启动优化
   - 绘制优化
 
+---
 
+**开源框架**
+
+- EventBus优化
 
 -  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 -  [kotlin](#kotlin)
@@ -56,7 +60,7 @@
 
 | Java堆：存对象，gc最重要的区域 分为年轻代、年老代和永久代 | （Program Counter）程序计数器  一小块内存区域 记录字节码执行 的位置  比如线程切换回来的时候，找到执行入口  特点:无OOM |
 | --------------------------------------------------------- | ------------------------------------------------------------ |
-|                                                           | 虚拟机栈：方法 栈帧  局部变量 入参，异常Outofmemory和stackoverflow |
+|                                                           | 虚拟机栈：方法 栈帧  **局部变量**  **入参**，异常Outofmemory和stackoverflow |
 | 方法区：静态常量、class类描述、常量池                     | 本地方栈：native方法                                         |
 | **线程共享**                                              | **线程私有**                                                 |
 
@@ -116,6 +120,14 @@ void a();
 
 ![memberValues存放方法名、值](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![动态代理与invocationHandler](https://img-blog.csdnimg.cn/20190403123142530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+#####简单说：
+
+1.首先注解是一个 `@interface` 声明的，编译的时候，编译器会把注解信息写入 `class` 类信息的属性表里面
+
+2.当我们 `getAnnotation()` 的时候，`annotationParser` 会从属性表解析出
+
+
 
 ### <a id="内部类">2. 内部类</a>
 内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，**不允许除外部类外的其他类访问它**；根据内部类定义的位置，可以分为几类。
@@ -199,7 +211,7 @@ public Destionation destionation(final String str) {
 
 ### <a id="动态代理">动态代理</a>
 - 好处：比静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
-- 使用：通过 `Proxy.newProxyInstance(classLoader，Class<?>[] inters, invocationHandler)` 生成代理对象
+- 使用：通过 `Proxy.newProxyInstance(classLoader，Class<?>[] interfaces, invocationHandler)` 生成代理对象
 - 原理：自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。
 ```java
 //动态代理类 代理类继承了IBossImpl 接口
@@ -288,21 +300,66 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 ### <a id="范型">范型</a>
 
 - **背景**：如果没有范型，比如 `Object[] a = new String[100];`，你修改a的时候，比如放入`1`，取出来使用的时候，可能会抛出 `ClassCastException`
+
 - **范型使用**
+
   - `class Stack<T> ` 修饰类
   - `<T> T poll(T element) ` 修饰方法
+
+- **注意点**
+
+  - 不可变  `List<Object> a = new ArrayList<String>()`报错，因为如果能赋值的话，`new ArrayList<Integer>()` 也能放，所以就会又出现 `classCastException`
+
 - **特点**
+
   - 非限定通配符 ? 表示任意类型 `Class<? extends Annotation>`
   - 上下界
     -  `super` 是某个类的父类 比如 `<? super Integer>`  
-    -  `extends` 某个类的子类 比如 `<? extends Number>` Intenger和long都能放 
+    -  `extends` 某个类的子类 比如 `<? extends Number>` 
+
 - **原理**：范型擦除  最终都是`Object` 类
+
+- **问题**
+
+  - **范型本质是 `object`，如果调用方法呢？**
+
+    `class Util<T extends Number>`，那么`T` 就是 `Number` 的子类，可以调用 `Number` 的方法。
+
+  - **什么是通配符？**
+
+    范型是不可变的，也就是说如果一个 `ArrayList<Integer>` 赋值给 `ArrayList<Object>` 是不行的，如果我们用 `ArrayList<?>` 表示可以接受任意参数的 `ArrayList`。
 
 [Java泛型常见面试题](https://blog.csdn.net/qq_25827845/article/details/76735277)
 
 
 
 ### <a id="容器">容器</a>
+
+`ArrayList`
+
+- 数据结构
+
+  - 数组
+
+- 扩容
+
+  - **扩容时机**，存放的时候，大小已经达到最大(和HashMap不同，HashMap有一个相关因子0.75，当元素个数到 `size * 0.75`时，双倍扩容 )，扩容方式，**1.5倍**
+
+- 原理
+
+  - `System.arraycopy()` 拷贝高效
+
+  - [`memmove` ](<https://www.cnblogs.com/xiehy/archive/2010/10/29/1864532.html>)
+
+    `extern void *memmove(void *dest, const void *src, unsigned int count);`
+
+    功能：由src所指内存区域复制count个字节到dest所指内存区域。
+
+    说明：src和dest所指内存区域可以重叠，但复制后dest内容会被更改。函数返回指向dest的指针。
+
+- 优化 初始化时指定默认大小
+
+
 
 `HashMap`
 
@@ -506,6 +563,19 @@ Thread thread2 = new Thread(){
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404163529864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
+#### 相关问题：
+
+`Wait和Sleep的区别`
+
+- Wait和Sleep都不占用CPU，wait 会释放锁，sleep不释放锁
+- wait必须要在`synchronized`块里面使用，wait可以携带等待时间参数(限时等待，但是如果这个时候锁被占用，不能被分配给它，限时等待不能唤醒，原理就是jvm会在一段时间后，分配锁和时间片给它)，也可以不携带等待时间参数(不限时等待，直到其他线程调用 `notify`或者`notifyAll`唤醒他，`notify`的话是随机唤醒，没有处理好，容易造成线程一直处理等待状态，线程饥饿)， sleep的话是必须传入一个时间，阻塞一段时间后，再由操作系统唤醒。
+
+
+
+---
+
+
+
 ### <a id="ThreadLocal">ThreadLocal</a>
 ThreadLocal类
 
@@ -529,6 +599,8 @@ ThreadLocal类
 
 - **原理**
 
+  如果是`class`类锁，静态方法或者class对象代码块，其实是在字节码的flag字段里面加入 `ACC_SYNCHRONIZED`
+
   `synchronized` 关键字同步的实现依赖于字节码，会在 `synchronized` 同步块的前后适用 `monitorenter` 和 `monitorexit` 指令，`monitorenter` 操作会去获取对象的锁(每个对象头部有一个监控器monitor 对象的头文件)，如果这个对象没被锁或者当前线程已经获得了锁(**重入锁**)，那么monitor的**计数器+1**，如果已经被其他线程锁住了，**自旋**等待一会最后阻塞，知道其他线程释放锁。执行 `monitorexit` 指令，**计数器-1**，直到计数器为0，释放锁。但是监视器锁本质又是依赖于底层的操作系统的**Mutex Lock**来实现的。
 
 - **适用场景和缺点**
@@ -538,6 +610,7 @@ ThreadLocal类
 - 版本优化
 
   - 1.6之后， **偏向锁** 和 **轻量级锁** 。synchronized的底层实现主要依靠 **Lock-Free** 的队列，基本思路是 **自旋后阻塞**，**竞争切换后继续竞争锁**，**稍微牺牲了公平性，但获得了高吞吐量**。在线程冲突较少的情况下，可以获得和CAS类似的性能；而线程冲突严重的情况下，性能远高于CAS。
+
 - 参考 [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
 ### 扩展
@@ -790,7 +863,7 @@ ThreadLocal类
 
 (原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，`lock` 之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
-![image-20190404165446591](/Users/didi/Library/Application Support/typora-user-images/image-20190404165446591.png)
+![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1554958780132&di=882d13580a89f9e483259ba19d8674a1&imgtype=0&src=http%3A%2F%2Fwx2.sinaimg.cn%2Fmw690%2F006Xp67Kly1fq13iwg31vj30mp09jtbz.jpg)
 
 ### <a id="cas">CAS (compare and swap)</a>
 
@@ -832,7 +905,7 @@ ThreadLocal类
 
 ### <a id="线程池">线程池</a>
 
-- 背景：线程池主要是为了解决频繁创建线程的CPU和资源开销，还可以控制最大的线程数量，核心的线程数量，回收线程，队列化的处理，还有拒绝策略
+- 背景：线程池主要是为了解决**频繁创建线程的CPU和资源开销**，还可以**控制最大的线程数量**，核心的线程数量，回收线程，队列化的处理，还有拒绝策略
 - 使用：核心线程数，最大线程数，回收时间、拥塞队列、线程工厂、拒绝Handler
 
 ```java
@@ -894,6 +967,24 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 >
 > 实现：使用 **[DelayWorkQueue](<https://www.jianshu.com/p/587901245c95>)**，保证添加到队列中的任务，会按照任务的延时时间进行排序，延时时间少的任务首先被获取。
 
+- 策略
+  - **当前线程数量小于核心线程数**，直接创建线程。 `addWorker()`
+  - **当前线程数量等于核心**，放入`BlockingQueue`，等线程`take`出来执行
+  - **`BlockingQueue`满了** , 就创建非核心线程执行任务(`addWorker()`)，然后用限时等待的 `poll(6000)`取消息，如果消息为 `null` 就回收线程，当线程等于核心线程时就不回收了。
+  - **非核心线程数大于最大线程数**，执行拒绝策略(或者shutdown)。
+
+- 原理
+
+  - 数据结构 ArrayList<Worker> workers BlockingQueue queue
+
+  - 线程如何共享任务的？
+
+    每个线程死循环从 `BlockingQueue` 取消息，然后执行 `Runnable`
+
+  - 非核心线程如何进行回收？
+
+  
+
 额外
 
 `execute和submit的区别？`
@@ -929,20 +1020,128 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 ---
 
-Android
+### Android
 
 ### Handler
+
+##### Looper
+
+```java
+private static void prepare(boolean quitAllowed) {
+  if (sThreadLocal.get() != null) {
+    throw new RuntimeException("Only one Looper may be created per thread");
+  }
+  sThreadLocal.set(new Looper(quitAllowed));
+}
+
+void loop(){
+  for(;){
+    Message msg = next(); //may blocking 
+    if(msg == null){ //退出
+      break;
+    }
+  }
+} ;
+
+public void quit() {
+    mQueue.quit(false);
+}
+
+```
+
+##### MessageQueue
+
+```java
+ Message next(){}
+
+ void quit(boolean safe) {
+  removeAllMessagesLocked();
+  // We can assume mPtr != 0 because mQuitting was previously false.
+  nativeWake(mPtr);
+}
+}
+```
 
 
 
 #### epoll
 
 ```c++
-epoll_create()
-  
+void Looper::rebuildEpollLocked() {
+    if (mEpollFd >= 0) {
+        close(mEpollFd); //关闭旧的epoll实例
+    }
+    mEpollFd = epoll_create(EPOLL_SIZE_HINT); //创建新的epoll实例，并注册wake管道
+    struct epoll_event eventItem;
+    memset(& eventItem, 0, sizeof(epoll_event)); //把未使用的数据区域进行置0操作
+    eventItem.events = EPOLLIN; //可读事件
+    eventItem.data.fd = mWakeEventFd;
+    //将唤醒事件(mWakeEventFd)添加到epoll实例(mEpollFd)
+    int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, & eventItem);
+
+    for (size_t i = 0; i < mRequests.size(); i++) {
+        const Request& request = mRequests.valueAt(i);
+        struct epoll_event eventItem;
+        request.initEventItem(&eventItem);
+        //将request队列的事件，分别添加到epoll实例
+        int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
+    }
+}
 ```
 
+### Binder
 
+- **Why?** 
+  - **高效**，只拷贝一次，socket那些都需要拷贝2次，从用户空间到内核空间，再从内核空间到用户空间。`binder` 适用 `mmap` 系统调用，把用户空间和内核空间都映射到同一块物理页，4M，然后只需要拷贝到 这个地址，用户空间就完成了内容传递。
+  - **安全**，协议里面带有uid验证
+
+- **use?**
+
+  ![img](https:////note.youdao.com/src/33C915661F2042D585D764C60E993FCB)
+
+- **Sample (aidl)**
+
+  - Impl 接口
+  - Stub 这个一个 `Binder`，继承impl接口，是服务端用的，有`onTransact`方法
+  - Proxy，是`BinderProxy`的代理，继承impl接口，有`Transact` 方法。
+
+- **跨进程观察者**
+
+  - Why? 
+
+    服务端主动通知客户端，比如有个下载服务，多进程复用下载服务，提交一个地址下载文件，并且会返回**下载百分比**。如果没有观察者，我们需要主动去轮训百分比结果，有观察者的话，服务端可以主动通知客户端。
+
+  - how？
+
+    1.首先需要定义一个接口，因为binder传递的对象只能是序列化的，所以接口的定义也是用aidl
+
+    2.把这个aidl接口调用服务端`register`方法注册的 `Proxy` 对象，这里注册的是 `Stub`对象，实际上服务端持有的是 `Stub.asInterface()`之后的代理对象，我们在这个 `Stub` 使用数据，比如进度的百分比，然后我们就使用 `ProgressBar` 来展示。
+
+    3.然后客户端调用下载方法，服务器线程池开启线程下载，然后调用客户端的回调通知客户端，这里这个回调就是 `Proxy`，相当于是客户端的binder客户端。
+
+  - **key point**
+
+    这里因为客户端持有的是binder的服务端，所以回调其实是在 **binder线程池** 调用的，所以回调需要抛到主线程处理。
+
+- **原理**
+
+  ![img](https:////note.youdao.com/src/42E5A2E26A3F41EB8DCF965586B19975)
+
+- **缺点** 因为映射的物理页大小设置问题，通常是1Mb限制
+
+
+
+### App启动流程
+
+- 主流程
+
+
+
+### 绘制机制
+
+##### MeasureSpec
+
+unspecefic
 
 
 
@@ -1005,7 +1204,6 @@ epoll_create()
 - 相对于ListView优点
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
   - 支持单个Item刷新
-  - 
 
 [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
