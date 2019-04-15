@@ -9,7 +9,12 @@
 -  [枚举](#枚举)
 -  [范型](#范型)
 -  [容器](#容器)
+    -  迭代器
 -  [异常](#异常)
+
+**其他**
+
+[final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 
 ---
 
@@ -40,7 +45,7 @@
 - 动画机制(Drawable Animation、View Animation、Property Animation)
 
 - 性能调优
-  - 布局优化
+  - [布局优化](#布局优化)
   - 启动优化
   - 绘制优化
 
@@ -50,10 +55,21 @@
 
 - EventBus优化
 
--  [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
--  [kotlin](#kotlin)
--  [布局优化](#布局优化)
--  [死锁](#死锁)
+---
+
+**其他**
+
+- [kotlin](#kotlin)
+
+---
+
+**计算机网络**
+
+---
+
+**操作系统**
+
+- [死锁](#死锁)
 
 ---
 ### <a id="内存模型">0. JVM内存模型</a>
@@ -121,16 +137,27 @@ void a();
 ![memberValues存放方法名、值](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![动态代理与invocationHandler](https://img-blog.csdnimg.cn/20190403123142530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
-#####简单说：
+##### 简单说：
 
 1.首先注解是一个 `@interface` 声明的，编译的时候，编译器会把注解信息写入 `class` 类信息的属性表里面
 
-2.当我们 `getAnnotation()` 的时候，`annotationParser` 会从属性表解析出
+2.当我们 `getAnnotation()` 的时候，`annotationParser` 会从属性表解析出 `Map<K,V>`，然后存放到`AnnotationInvocationHandler` 的 `map` 里面，然后会生成一个 继承自 `Proxy` 的 `Proxy$0` 子类，  然后比如把 `value` 方法拦截给 `AnnotationInvocationHandler`，再从 `AnnotationInvocationHandler` 里面查询K 为 `value` 的V. 
 
 
 
 ### <a id="内部类">2. 内部类</a>
-内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，**不允许除外部类外的其他类访问它**；根据内部类定义的位置，可以分为几类。
+**why?**
+
+​	内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。
+
+**特点：**
+
+​	内部类定义在另外一个类里面的类。它隐藏在外部类中，封装性更强，**不允许除外部类外的其他类访问它**；
+
+**分类**
+
+​	根据内部类定义的位置，可以分为几类。
+
 -  **成员内部类**
   能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
 -  **静态内部类**
@@ -210,9 +237,17 @@ public Destionation destionation(final String str) {
   只能被初始化一次。
 
 ### <a id="动态代理">动态代理</a>
-- 好处：比静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
-- 使用：通过 `Proxy.newProxyInstance(classLoader，Class<?>[] interfaces, invocationHandler)` 生成代理对象
-- 原理：自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。
+- **好处：**
+
+  ​	静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
+
+- **使用：** 
+
+  ​	通过 `Proxy.newProxyInstance(classLoader，Class<?>[] interfaces, invocationHandler)` 生成代理对象
+
+- **原理：**
+
+  ​	自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。(具体例子参考  [LoveStudy](https://github.com/samwangzhibo/LoveStudy) 项目 `com.example.wangzhibo.lovestudy.jvm.dproxy`)
 ```java
 //动态代理类 代理类继承了IBossImpl 接口
 public final class $Proxy0 extends Proxy implements IBossImpl {
@@ -312,10 +347,10 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 - **特点**
 
-  - 非限定通配符 ? 表示任意类型 `Class<? extends Annotation>`
+  - 非限定通配符 ? 表示任意类型 `void a(List<?> list)`
   - 上下界
-    -  `super` 是某个类的父类 比如 `<? super Integer>`  
-    -  `extends` 某个类的子类 比如 `<? extends Number>` 
+    -  `super` 是某个类的父类 比如 `void a(List<? super Integer> list)`  
+    -  `extends` 某个类的子类 比如 `void a(List<? extends Number> list)` 
 
 - **原理**：范型擦除  最终都是`Object` 类
 
@@ -410,9 +445,82 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
+### Iterator
+
+- 出现背景：因为有迭代器，容器的遍历可以不考虑其存储结构，用迭代器的统一接口完成遍历.
+- 注意点：迭代的时候能够删除节点，但是不能新增节点，否则会抛出 `ConcurrentModifyException` 
+- 使用
+
+```java
+  Iterator iterator = list.iterator();
+  while(iterator.hasNext()) {
+    int i = (int) iterator.next();
+    System.out.println(i + "");
+  }
+```
+
+- 实现原理：
+
+```java
+  protected int limit = ArrayList.this.size;
+        int cursor;       // 表示下一个要访问的元素的索引，从next()方法的具体实现就可看出
+        int lastRet = -1; // 表示上一个访问的元素的索引; -1 if no such
+        int expectedModCount = modCount; //表示对ArrayList修改次数的期望值，它的初始值为modCount。
+        public boolean hasNext() {
+                    //如果没超出limit
+                    return cursor < limit;
+        }
+
+        public E next() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+            int i = cursor;
+            if (i >= limit)
+                throw new NoSuchElementException();
+            Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length)
+                throw new ConcurrentModificationException();
+            cursor = i + 1;
+            return (E) elementData[lastRet = i];
+        }
+
+        public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+                limit--;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+```
+
+- ConcurrentModifyException：(调用list.remove()方法导致 `modCount` 和 `expectedModCount` 的值不一致。) [Java ConcurrentModificationException异常原因和解决方法](https://www.cnblogs.com/dolphin0520/p/3933551.html)
+  - 单线程环境 ：`remove()` 可以使用 直接操作 `list` 的话 会导致 `modCount` 和 `expectedModCount`不一致
+  - 多线程环境 `remove()`不能使用，因为不同线程遍历的时候生成了不同的 `Iterator`，也就是 `expectModCount` 是私有的，但是 `modCount` 是共有的，一个线程把 `modCount++` 了，另一个线程的 `expectModCount` 并不知道
+  - 如何解决 1.在使用iterator迭代的时候使用synchronized或者Lock进行同步； 2.使用并发容器CopyOnWriteArrayList代替ArrayList和Vector。
+
+### CopyOnWriteArrayList
+
+[先简单说一说Java中的CopyOnWriteArrayList](https://juejin.im/post/5aaa2ba8f265da239530b69e)
+
+- **背景：**concurrentModifyException(在迭代的时候添加了数据，导致容器内部的 `modCount` 和 迭代内部的 `expectCount` 不一致，抛出异常)，写时拷贝策略(add操作的时候，先复制一个新的数组，然后修改新的数组，完成之后再赋值回原数组)
+- **how?** 
+
+写时拷贝策略，add操作的时候，先复制一个新的数组，然后修改新的数组，完成之后再赋值回原数组，这样就不会修改modCount字段了，而是直接把修改完的结果，覆盖原`object[]`
+
+
+
 ### <a id="枚举">枚举</a>
 
-通过 `enum` 关键字声明，实际上会生成一个继承 `Enum 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
+通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
 
 ```java
 enum Week{
@@ -475,9 +583,31 @@ public enum CustomEnum {
 [深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
 ![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
+**Java其他**
+
+### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
+
+> - 技术点：final、finally、finalize()
+> - 参考回答：
+>
+> - final关键字表示不可更改，具体体现在：
+>   - final修饰的变量必须要初始化，且赋初值后不能再重新赋值
+>   - final修饰的方法不能被子类重写
+>   - final修饰的类不能被继承
+> - finally：和try、catch成套使用进行异常处理，无论是否捕获或处理异常，finally块里的语句都会被执行，在以下4种特殊情况下，finally块才不会被执行：
+>   - 在finally语句块中发生了异常
+>   - 在前面的代码中用了System.exit()退出程序
+>   - 程序所在的线程死亡
+>   - 关闭CPU
+> - finalize()：是Object中的方法，当垃圾回收器将回收对象从内存中清除出去之前会调用finalize()，但此时并不代表该回收对象一定会“死亡”，还有机会“逃脱”
+
+
+
 ---
 
-### `Q：什么是线程安全？保障线程安全有哪些手段？`
+###**Java并发编程**
+
+### Q：什么是线程安全？保障线程安全有哪些手段？`
 
 > 技术点：线程安全
 >
@@ -1024,9 +1154,24 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 ### Handler
 
+1. Handler通过 `sendMessage()` 发送Message到MessageQueue队列；
+
+2. Looper通过 `loop()` ，不断提取出达到触发条件的Message，并将Message交给target来处理；
+
+3. 经过dispatchMessage()后，交回给Handler的handleMessage()来进行相应地处理。
+
+   **ps** : 
+
+   > 将Message加入MessageQueue时，处往管道写入字符，可以会唤醒loop线程；
+   >
+   > 如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
+
+![handler_java](http://gityuan.com/images/handler/handler_java.jpg)
+
 ##### Looper
 
 ```java
+//1.初始化Looper对象到线程本地变量
 private static void prepare(boolean quitAllowed) {
   if (sThreadLocal.get() != null) {
     throw new RuntimeException("Only one Looper may be created per thread");
@@ -1034,6 +1179,7 @@ private static void prepare(boolean quitAllowed) {
   sThreadLocal.set(new Looper(quitAllowed));
 }
 
+//2.循环，取出一条消息然后分发给Handler
 void loop(){
   for(;){
     Message msg = next(); //may blocking 
@@ -1043,6 +1189,7 @@ void loop(){
   }
 } ;
 
+//3. 退出loop()循环，往队列里面写入一个null消息，获取出空消息时，退出循环
 public void quit() {
     mQueue.quit(false);
 }
@@ -1052,8 +1199,10 @@ public void quit() {
 ##### MessageQueue
 
 ```java
- Message next(){}
+// 1.获取消息 
+Message next(){}
 
+// 2.移出所有消息，放入一条null消息，然后唤醒阻塞线程
  void quit(boolean safe) {
   removeAllMessagesLocked();
   // We can assume mPtr != 0 because mQuitting was previously false.
@@ -1087,11 +1236,26 @@ void Looper::rebuildEpollLocked() {
         int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
     }
 }
+
+//创建新的epoll实例，并注册wake管道
+mEpollFd = epoll_create(EPOLL_SIZE_HINT);
+
+//将唤醒事件(mWakeEventFd)添加到epoll实例(mEpollFd)
+int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, & eventItem);
+
+//等待事件发生或者超时，在nativeWake()方法，向管道写端写入字符，则该方法会返回；
+int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
+
 ```
+
+##### 参考
+
+[Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
 
 ### Binder
 
 - **Why?** 
+
   - **高效**，只拷贝一次，socket那些都需要拷贝2次，从用户空间到内核空间，再从内核空间到用户空间。`binder` 适用 `mmap` 系统调用，把用户空间和内核空间都映射到同一块物理页，4M，然后只需要拷贝到 这个地址，用户空间就完成了内容传递。
   - **安全**，协议里面带有uid验证
 
@@ -1129,11 +1293,21 @@ void Looper::rebuildEpollLocked() {
 
 - **缺点** 因为映射的物理页大小设置问题，通常是1Mb限制
 
+![img](https:////note.youdao.com/src/42E5A2E26A3F41EB8DCF965586B19975)
 
+![img](https:////note.youdao.com/src/33C915661F2042D585D764C60E993FCB)
 
 ### App启动流程
 
 - 主流程
+  1. **Pause上一个Activity**，比如Launcher
+  2. AMS**开启一个进程**(`Process.start()`)，`Looper.loop()`，`ActivityThread.attach(new applicationThread())`
+  3. ActivityThread和**AMS连接**，传入`applicationThread` 的匿名binder
+  4. **创建Application**，`AMS#attachApplication()`, 新建`Application`， 新建 application级别的context( `ContextImpl#createAppContext()`)，回调 `onCreate()`
+  5. **启动Activity**，新建`Activity`，并且 attach activity级别的Context(`ContextImpl#createActivityContext()`)，生成Window(`new PhoneWindow()`)，然后回调 `onCreate()`，生成 DecorView(`installDecor()`)，`setContextView(R.layout.xml)`(通过 LayoutInflator 解析xml至视图树到DecorView)
+  6. **执行绘制**，`handleResumeActivity()`，先执行 `onStart`， 然后执行 `onResume`，之后获取`windowManager` 并执行 `windowManager#addView()`，最后调用`WindowGlobabl#addView()`，创建ViewRootImpl，调用 `requestLayout()` 方法，`performTraversal()`， 调用 `performMeasure()`、 `performLayout()`、`performDraw()`
+  7.  建立事件通道，创建 `WindowInputEventReceiver`，使用`pair` 创建2个`channel`，事件的服务是InputManagerService，进程是SystemServer，线程是`InputReader`和`InputDispatcher`，事件处理模块EventHub   ![img](https:////note.youdao.com/src/3AB4BEF5C63E4603A683CC0D22B59B03)
+  8. 通知上个Activity **onStop**
 
 
 
@@ -1145,35 +1319,39 @@ unspecefic
 
 
 
-### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
+### 事件传递机制
 
-> - 技术点：final、finally、finalize()
-> - 参考回答：
-> * final关键字表示不可更改，具体体现在：
->   * final修饰的变量必须要初始化，且赋初值后不能再重新赋值
->   * final修饰的方法不能被子类重写
->   * final修饰的类不能被继承
-> * finally：和try、catch成套使用进行异常处理，无论是否捕获或处理异常，finally块里的语句都会被执行，在以下4种特殊情况下，finally块才不会被执行：
->   * 在finally语句块中发生了异常
->   * 在前面的代码中用了System.exit()退出程序
->   * 程序所在的线程死亡
->   * 关闭CPU
-> * finalize()：是Object中的方法，当垃圾回收器将回收对象从内存中清除出去之前会调用finalize()，但此时并不代表该回收对象一定会“死亡”，还有机会“逃脱”
+![img](https:////note.youdao.com/src/WEBRESOURCE7f8bde431090fdde9bda3fd73af229e4)
+
+![img](https:////note.youdao.com/src/4BAA323E88CB4D83957A225AD773DCBA)
+
+##### InputManagerService
+
+[十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
 
 
 
-### <a id="kotlin">kotlin</a>
-[用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
+### Android优化
 
 ### <a id="布局优化">`Q：布局上如何优化？`</a>
+
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
->   + 多嵌套情况下可使用RelativeLayout减少嵌套。
->   + 布局层级相同的情况下使用LinearLayout，它比RelativeLayout更高效。
->
->   + 使用 `<include>` 标签重用布局、`<merge>` 标签减少层级、`<ViewStub>` 标签懒加载。
+>   - 多嵌套情况下可使用RelativeLayout减少嵌套。
+>   - 布局层级相同的情况下使用LinearLayout，它比RelativeLayout更高效。
+>   - 使用 `<include>` 标签重用布局、`<merge>` 标签减少层级、`<ViewStub>` 标签懒加载。
+
+
+
+---
+
+### **其他**
+
+### <a id="kotlin">kotlin</a>
+
+[用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
 
@@ -1191,13 +1369,9 @@ unspecefic
       - 特点：一个方法**必须通过throws**语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
       - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
 
+---
 
-
-
-
-
-
-
+### **源码**
 
 ### RecyclerView
 
@@ -1209,110 +1383,11 @@ unspecefic
 
 
 
-
-
 ### Retrofit
 
 
 
-
-
-### InputManagerService
-
-[十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
-
-
-
-
-
-### CopyOnWriteArrayList
-
-[先简单说一说Java中的CopyOnWriteArrayList](https://juejin.im/post/5aaa2ba8f265da239530b69e)
-
-- 背景：concurrentModifyException(在迭代的时候添加了数据)
-
-
-
-
-
-
-
-### Iterator
-
-- 出现背景：因为有迭代器，容器的遍历可以不考虑其存储结构，用迭代器的统一接口完成遍历.
-
-- 注意点：迭代的时候能够删除节点，但是不能新增节点，否则会抛出 `ConcurrentModifyException` 
-- 使用
-
-```java
-  Iterator iterator = list.iterator();
-  while(iterator.hasNext()) {
-    int i = (int) iterator.next();
-    System.out.println(i + "");
-  }
-```
-
-- 实现原理：
-
-```java
-  protected int limit = ArrayList.this.size;
-        int cursor;       // 表示下一个要访问的元素的索引，从next()方法的具体实现就可看出
-        int lastRet = -1; // 表示上一个访问的元素的索引; -1 if no such
-        int expectedModCount = modCount; //表示对ArrayList修改次数的期望值，它的初始值为modCount。
-        public boolean hasNext() {
-                    //如果没超出limit
-                    return cursor < limit;
-        }
-
-        public E next() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-            int i = cursor;
-            if (i >= limit)
-                throw new NoSuchElementException();
-            Object[] elementData = ArrayList.this.elementData;
-            if (i >= elementData.length)
-                throw new ConcurrentModificationException();
-            cursor = i + 1;
-            return (E) elementData[lastRet = i];
-        }
-
-        public void remove() {
-            if (lastRet < 0)
-                throw new IllegalStateException();
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
-
-            try {
-                ArrayList.this.remove(lastRet);
-                cursor = lastRet;
-                lastRet = -1;
-                expectedModCount = modCount;
-                limit--;
-            } catch (IndexOutOfBoundsException ex) {
-                throw new ConcurrentModificationException();
-            }
-        }
-```
-
-- ConcurrentModifyException：(调用list.remove()方法导致 `modCount` 和 `expectedModCount` 的值不一致。) [Java ConcurrentModificationException异常原因和解决方法](https://www.cnblogs.com/dolphin0520/p/3933551.html)
-  - 单线程环境 ：`remove()` 可以使用 直接操作 `list` 的话 会导致 `modCount` 和 `expectedModCount`不一致
-  - 多线程环境 `remove()`不能使用，因为不同线程遍历的时候生成了不同的 `Iterator`，也就是 `expectModCount` 是私有的，但是 `modCount` 是共有的，一个线程把 `modCount++` 了，另一个线程的 `expectModCount` 并不知道
-  - 如何解决 1.在使用iterator迭代的时候使用synchronized或者Lock进行同步； 2.使用并发容器CopyOnWriteArrayList代替ArrayList和Vector。
-
-
-
-
-
 [Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
-
-
-
-
-
-
-
-
 
 
 
@@ -1321,8 +1396,6 @@ unspecefic
 #### Gif图的加载
 
 - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
-
-
 
 ###  <a id="View相关">View相关</a>
 
