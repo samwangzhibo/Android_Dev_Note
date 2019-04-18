@@ -1,7 +1,3 @@
----
-typora-root-url: ./picture
----
-
 **Java基础**
 
 -  [JVM内存模型](内存模型)
@@ -1323,9 +1319,9 @@ unspecefic
 
 ### 事件传递机制
 
-![image-20190418151849681](/../../picture/image-20190418151849681.png)
+![image-20190418151849681](./picture/image-20190418151849681.png)
 
-##### ![image-20190418151939418](/../../picture/image-20190418151939418.png)InputManagerService
+##### ![image-20190418151939418](./picture/image-20190418151939418.png)InputManagerService
 
 [十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
 
