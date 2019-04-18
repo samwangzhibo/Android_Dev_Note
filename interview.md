@@ -1,3 +1,7 @@
+---
+typora-root-url: ./picture
+---
+
 **Java基础**
 
 -  [JVM内存模型](内存模型)
@@ -416,7 +420,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
     - 原因：`resize` `transfer`
 
-      ![image-20190406125940779](/Users/didi/Library/Application Support/typora-user-images/image-20190406125940779.png)
+      ![image-20190418150348602](https://ws1.sinaimg.cn/large/006tNc79ly1g26t1es1shj30u00ub7gb.jpg)
 
     - 解决：[老生常谈，HashMap的死循环](<https://juejin.im/post/5a66a08d5188253dc3321da0#heading-1>)
   - **Fast fail 策略**，迭代的时候，做了操作， 修改了modCount的值
@@ -1261,7 +1265,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 - **use?**
 
-  ![img](https:////note.youdao.com/src/33C915661F2042D585D764C60E993FCB)
+  ![image-20190418112753024](https://ws1.sinaimg.cn/large/006tNc79ly1g26t5co7n8j31do0nu0wh.jpg)
 
 - **Sample (aidl)**
 
@@ -1289,13 +1293,11 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 - **原理**
 
-  ![img](https:////note.youdao.com/src/42E5A2E26A3F41EB8DCF965586B19975)
+  ![image-20190418112932108](https://ws4.sinaimg.cn/large/006tNc79ly1g26t5bxd2rj314o0fyq4m.jpg)
 
 - **缺点** 因为映射的物理页大小设置问题，通常是1Mb限制
 
-![img](https:////note.youdao.com/src/42E5A2E26A3F41EB8DCF965586B19975)
 
-![img](https:////note.youdao.com/src/33C915661F2042D585D764C60E993FCB)
 
 ### App启动流程
 
@@ -1304,9 +1306,9 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
   2. AMS**开启一个进程**(`Process.start()`)，`Looper.loop()`，`ActivityThread.attach(new applicationThread())`
   3. ActivityThread和**AMS连接**，传入`applicationThread` 的匿名binder
   4. **创建Application**，`AMS#attachApplication()`, 新建`Application`， 新建 application级别的context( `ContextImpl#createAppContext()`)，回调 `onCreate()`
-  5. **启动Activity**，新建`Activity`，并且 attach activity级别的Context(`ContextImpl#createActivityContext()`)，生成Window(`new PhoneWindow()`)，然后回调 `onCreate()`，生成 DecorView(`installDecor()`)，`setContextView(R.layout.xml)`(通过 LayoutInflator 解析xml至视图树到DecorView)
+  5. **启动Activity**，`applicationThread#scheduleLaunchActivity()`，`H` Handler 转发，主线程`performLaunchActivity()`,  新建`Activity`，并且 attach activity级别的Context(`ContextImpl#createActivityContext()`)，生成Window(`new PhoneWindow()`)，然后回调 `onCreate()`，生成 DecorView(`installDecor()`)，`setContextView(R.layout.xml)`(通过 LayoutInflator 解析xml至视图树到DecorView)
   6. **执行绘制**，`handleResumeActivity()`，先执行 `onStart`， 然后执行 `onResume`，之后获取`windowManager` 并执行 `windowManager#addView()`，最后调用`WindowGlobabl#addView()`，创建ViewRootImpl，调用 `requestLayout()` 方法，`performTraversal()`， 调用 `performMeasure()`、 `performLayout()`、`performDraw()`
-  7.  建立事件通道，创建 `WindowInputEventReceiver`，使用`pair` 创建2个`channel`，事件的服务是InputManagerService，进程是SystemServer，线程是`InputReader`和`InputDispatcher`，事件处理模块EventHub   ![img](https:////note.youdao.com/src/3AB4BEF5C63E4603A683CC0D22B59B03)
+  7. **建立事件通道**，创建 `WindowInputEventReceiver`，使用`pair` 创建2个`channel`，事件的服务是InputManagerService，进程是SystemServer，线程是`InputReader`和`InputDispatcher`，事件处理模块EventHub  ![image-20190418112523977](https://ws3.sinaimg.cn/large/006tNc79ly1g26t5dmcfjj31m70u0gzh.jpg)
   8. 通知上个Activity **onStop**
 
 
@@ -1321,11 +1323,9 @@ unspecefic
 
 ### 事件传递机制
 
-![img](https:////note.youdao.com/src/WEBRESOURCE7f8bde431090fdde9bda3fd73af229e4)
+![image-20190418151849681](/../../picture/image-20190418151849681.png)
 
-![img](https:////note.youdao.com/src/4BAA323E88CB4D83957A225AD773DCBA)
-
-##### InputManagerService
+##### ![image-20190418151939418](/../../picture/image-20190418151939418.png)InputManagerService
 
 [十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
 
@@ -1378,6 +1378,8 @@ unspecefic
 - 相对于ListView优点
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
   - 支持单个Item刷新
+- LayoutManager
+- ItemDecoration
 
 [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
@@ -1385,9 +1387,61 @@ unspecefic
 
 ### Retrofit
 
-
-
 [Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
+
+Rxjava
+
+Glide
+
+OKHttp
+
+leacany
+
+#### SurfaceView
+
+#### NestedParent和 NestedChild
+
+#### CoordinatorLayout和Behivor(协同布局)
+
+#### ConstaintLayout(约束布局)
+
+
+
+Service
+
+生命周期
+
+启动过程
+
+
+
+ContentProvider
+
+生命周期 
+
+启动过程
+
+
+
+Broadcast 
+
+启动过程
+
+
+
+SharePrefenrence 
+
+背景：比contentProvider轻量级
+
+特点：线程安全、进程不安全
+
+为什么进程不安全？如何保证进程安全？
+
+
+
+
+
+
 
 
 
