@@ -611,9 +611,9 @@ public enum CustomEnum {
 
 
 
-**Java其他**
+## **9. Java其他**
 
-## <a id="final、finally、finalize()">9.final、finally、finalize()分别表示什么含义</a>
+### <a id="final、finally、finalize()">9.1 final、finally、finalize()分别表示什么含义</a>
 
 > - 技术点：final、finally、finalize()
 > - 参考回答：
@@ -716,7 +716,7 @@ Thread thread2 = new Thread(){
 
 参考 [Java线程中yield与join方法的区别](http://www.importnew.com/14958.html)
 
-<a id="线程生命周期">线程生命周期(新建、就绪、阻塞(运行) 、运行、终止)</a>
+### <a id="线程生命周期">线程生命周期(新建、就绪、阻塞(运行) 、运行、终止)</a>
 
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404163529864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
@@ -1335,7 +1335,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-## 4. 绘制机制
+## 4.View绘制机制
 
 
 
@@ -1357,7 +1357,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-## 5. 事件传递机制
+## 5. TouchEvent事件传递机制
 
 ![image-20190418151849681](picture/image-20190418151849681.png)
 
@@ -1369,15 +1369,13 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-## 6. 图片相关
-
-### Gif图的加载
-
-- 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+## 6. 滚动机制(Scroll、Fling)
 
 
 
-## 7. 动画机制
+
+
+## 7. 动画机制(Drawable Animation、View Animation、Property Animation)
 
 - **帧动画** (AnimationDrawable)
 
@@ -1524,16 +1522,30 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
   - How? 
 
     **Choreographer** 和 **VSnc** 垂直同步信号量回调
+  
+  
+  
+  ## 8. 图片相关
+  
+  ### Gif图的加载
+  
+  - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
 
-# Android优化
+## 8. 性能优化
 
-## <a id="布局优化">`Q：布局上如何优化？`</a>
+### <a id="布局优化">布局优化</a>
 
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
 >   - 多嵌套情况下可使用RelativeLayout减少嵌套。
 >   - 布局层级相同的情况下使用LinearLayout，它比RelativeLayout更高效。
 >   - 使用 `<include>` 标签重用布局、`<merge>` 标签减少层级、`<ViewStub>` 标签懒加载。
+
+
+
+### 启动优化
+
+### 绘制优化
 
 
 
