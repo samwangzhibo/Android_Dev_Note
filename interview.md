@@ -1,3 +1,7 @@
+# 目录
+
+---
+
 **Java基础**
 
 -  [JVM内存模型](内存模型)
@@ -14,7 +18,7 @@
 
 **其他**
 
-[final、finally、finalize()分别表示什么含义](#final、finally、finalize)
+- [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 
 ---
 
@@ -60,6 +64,7 @@
 **其他**
 
 - [kotlin](#kotlin)
+- [上传库到Maven](#上传到Maven)
 
 ---
 
@@ -72,7 +77,11 @@
 - [死锁](#死锁)
 
 ---
-### <a id="内存模型">0. JVM内存模型</a>
+# Java基础
+
+---
+
+## <a id="内存模型">0. JVM内存模型</a>
 
 | Java堆：存对象，gc最重要的区域 分为年轻代、年老代和永久代 | （Program Counter）程序计数器  一小块内存区域 记录字节码执行 的位置  比如线程切换回来的时候，找到执行入口  特点:无OOM |
 | --------------------------------------------------------- | ------------------------------------------------------------ |
@@ -85,7 +94,8 @@
 - gc算法分类
   - 1.程序计数器，引用+1，销毁、失效-1 
   - 2.可达性分析 
-    -  GRoot 静态对象、常量池对象
+    
+    -  ## GRoot 静态对象、常量池对象
 - 分代回收
   - **新生代**： 一个eden区，两个存活区。Eden满后，把存活的对象复制到存活区。存活区满后，把仍存活的对象复制到另一个存活区，这个也满了后，仍存活的复制到另一个存活区。**一次只有一个存活区**
     - young gc：停止复制算法stop-the-world 
@@ -97,7 +107,7 @@
   - 并行和串行收集器
   - CMS 收集器 “最短回收停顿优先”收集器（标记—清除算法：初始标记—并发标记—重新标记—并发清除）
 
-### <a id="1.注解">1.注解</a>
+## <a id="1.注解">1.注解</a>
 
 - 背景
 
@@ -130,14 +140,14 @@ void a();
 
 [JAVA 注解的基本原理](https://juejin.im/post/5b45bd715188251b3a1db54f)
 
-#### <a id="getAnnotation的流程">getAnnotation的流程</a>
+### <a id="getAnnotation的流程">getAnnotation的流程</a>
 ![getAnnotation函数调用](https://img-blog.csdnimg.cn/20190308115403444.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 > `getAnnotation()` 发现没有缓存的 `Annotation` 对象， 通过`AnnotationParser` 解析属性表里面的注解信息到一个map，然后生成 `AnnotationInvocationHandler`，并且生成一个动态代理的Proxy类，然后把代理方法派发给`Handler`，`Handler` 通过方法名比如`value`从Map里面获取属性表参数.
 
 ![memberValues存放方法名、值](https://img-blog.csdnimg.cn/20190308140942229.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![动态代理与invocationHandler](https://img-blog.csdnimg.cn/20190403123142530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
-##### 简单说：
+### 简单说：
 
 1.首先注解是一个 `@interface` 声明的，编译的时候，编译器会把注解信息写入 `class` 类信息的属性表里面
 
@@ -145,7 +155,7 @@ void a();
 
 
 
-### <a id="内部类">2. 内部类</a>
+## <a id="内部类">2. 内部类</a>
 **why?**
 
 ​	内部类的引入主要是为了解决Java没有多重继承然后提供的语法糖。
@@ -171,7 +181,7 @@ void a();
 [java提高篇(八)----详解内部类](https://www.cnblogs.com/chenssy/p/3388487.html)
 
 
-### <a id="final">3. final</a>
+## <a id="final">3. final</a>
 - 修饰类 类不能被继承，比如String就是final类型的，内部是字符串的封装操作，系统不希望它被重写。
 - 修饰方法 方法不能被子类重写。
   比如View的measure、layout、draw，因为它们内部有缓存逻辑，比如measure会通过计算父布局传过来的MeasureSpec和缓存的meaSpec做比较，然后来控制onMeasure的调用。这个会MeasureSpec是父布局通过父View的measureSpec和子View的LayoutParams 生成的measureSpec，最终传给子View的onMeasure方法。MeasureSpec是32位的整型。前2位是模式，后30位是size。模式分为 `Unspesfic`、`At_most`、`Exctly`，我们自定义View需要处理 `at_most` 模式，比如`TextView` 的 `at_most` 模式就是按照字体的大小和个数来计算出来的。
@@ -236,7 +246,7 @@ public Destionation destionation(final String str) {
 * 成员变量 
   只能被初始化一次。
 
-### <a id="动态代理">动态代理</a>
+## <a id="动态代理">动态代理</a>
 - **好处：**
 
   ​	静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
@@ -445,7 +455,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
-### Iterator
+#### Iterator
 
 - 出现背景：因为有迭代器，容器的遍历可以不考虑其存储结构，用迭代器的统一接口完成遍历.
 - 注意点：迭代的时候能够删除节点，但是不能新增节点，否则会抛出 `ConcurrentModifyException` 
@@ -507,7 +517,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
   - 多线程环境 `remove()`不能使用，因为不同线程遍历的时候生成了不同的 `Iterator`，也就是 `expectModCount` 是私有的，但是 `modCount` 是共有的，一个线程把 `modCount++` 了，另一个线程的 `expectModCount` 并不知道
   - 如何解决 1.在使用iterator迭代的时候使用synchronized或者Lock进行同步； 2.使用并发容器CopyOnWriteArrayList代替ArrayList和Vector。
 
-### CopyOnWriteArrayList
+#### CopyOnWriteArrayList
 
 [先简单说一说Java中的CopyOnWriteArrayList](https://juejin.im/post/5aaa2ba8f265da239530b69e)
 
@@ -583,6 +593,24 @@ public enum CustomEnum {
 [深入理解Java枚举类型(enum)](https://blog.csdn.net/javazejian/article/details/71333103)
 ![枚举的匿名内部类](https://img-blog.csdnimg.cn/20190321143730452.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
+
+
+#### <a id="异常">异常</a>
+
+- 分类
+  - Error
+    - 错误，不能通过代码修复的，可以不用处理 
+    - 例子：`StackOverFlowError` `OutOfMemoryError`
+  - Exception
+    - 执行异常（RuntimeException）
+      - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都**无需在`throws`**子句中进行声明
+      - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException` `ConcurrentModifyException`
+    - 检查异常（Checked Exceptions）
+      - 特点：一个方法**必须通过throws**语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
+      - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
+
+
+
 **Java其他**
 
 ### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
@@ -605,7 +633,7 @@ public enum CustomEnum {
 
 ---
 
-###**Java并发编程**
+##**Java并发编程**
 
 ### Q：什么是线程安全？保障线程安全有哪些手段？`
 
@@ -746,8 +774,6 @@ ThreadLocal类
 ### 扩展
 
 ---
-
-
 
 #### 1. [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
 
@@ -937,7 +963,7 @@ ThreadLocal类
 
 - 参考 [ReentrantLock(重入锁)功能详解和应用演示](https://www.cnblogs.com/takumicx/p/9338983.html) [阻塞和唤醒线程——LockSupport功能简介及原理浅析](https://www.cnblogs.com/takumicx/p/9328459.html)
 
-#### ReadWriteLock
+### ReadWriteLock
 
 ### LockSupport
 
@@ -1029,7 +1055,7 @@ ThreadLocal类
 
   - CPU占比很高、吞吐量很高
 
-- 参考 [面试必备之乐观锁与悲观锁](<https://juejin.im/post/5b4977ae5188251b146b2fc8>)
+- 参考 [面试必备之乐观锁与悲观锁](<https://juejin.im/post/5b4977ae5188251b146b2fc8>) [面试难点：你了解乐观锁和悲观锁吗？](https://mp.weixin.qq.com/s/OsQYHZfLYKqY6QtReO4qww)
 
 
 
@@ -1315,23 +1341,169 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 unspecefic
 
-
+![å¾3ï¼Androidç»å¶æºå¶_åå¾.jpg](https://upload-images.jianshu.io/upload_images/2911038-2922d52fe51235af.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 ### 事件传递机制
 
-![image-20190418151849681](./picture/image-20190418151849681.png)
+![image-20190418151849681](../picture/image-20190418151849681.png)
 
-##### ![image-20190418151939418](./picture/image-20190418151939418.png)InputManagerService
+##### ![image-20190418151939418](../picture/image-20190418151939418.png)InputManagerService
 
 [十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
 
 
 
+### 动画机制
 
+- **帧动画** (AnimationDrawable)
+
+  - 使用
+
+    ```java
+     AnimationDrawable ad = new AnimationDrawable();//1.创建AnimationDrawable对象
+            ColorDrawable redDrawable = new ColorDrawable(Color.RED);
+            ColorDrawable yellowDrawable = new ColorDrawable(Color.YELLOW);
+            ColorDrawable blueDrawable = new ColorDrawable(Color.BLUE);
+            ad.addFrame(redDrawable, 500); //2.添加图片帧和时间
+            ad.addFrame(yellowDrawable, 500);
+            ad.addFrame(blueDrawable, 500);
+    
+            ad.setOneShot(false);//3.设置是否执行一次
+            handleView.setBackground(ad);//4.将帧动画作为view背景
+            ad.start();//5.播放动画
+    ```
+
+  - 原理
+
+     	每隔**一定时间**朝主线程的队列抛掷一个 `invalidate` 重刷任务，一定时间是xml配置的时间
+
+- **补间动画** (ViewAnimation)
+
+  - what?  通过Canvas Matrix的变化
+
+  - 分类
+
+    > TranslateAnimation、 RotateAnimation、AlphaAnimation、ScaleAnimation
+
+  - Usage
+
+    - 自定义
+
+      > 重写apply方法，获取其中的Matrix做修改
+
+      ```java
+      /**
+       * 3D旋转动画  使用{@link Camera}
+       * Created by samwangzhibo on 2019/3/22.
+       */
+      
+      public class ThirdDRotationAnim extends Animation{
+          private int mCenterWidth, mCenterHeight;
+          private Camera mCamera = new Camera();
+          private float mRotateY = 0.0f;
+      
+          // 一般在此方法初始化一些动画相关的变量和值
+          @Override
+          public void initialize(int width, int height, int parentWidth, int parentHeight) {
+              super.initialize(width, height, parentWidth, parentHeight);
+              // 设置默认时长
+              setDuration(4000);
+              // 保持动画的结束状态
+              setFillAfter(false);
+              // 设置默认插值器
+              setInterpolator(new BounceInterpolator());// 回弹效果的插值器
+              mCenterWidth = width / 2;
+              mCenterHeight = height /2;
+          }
+      
+          // 暴露接口设置旋转角度
+          public void setRotateY(float rotateY) {
+              mRotateY = rotateY;
+          }
+      
+          // 自定义动画的核心，在动画的执行过程中会不断回调此方法，并且每次回调interpolatedTime值都在不断变化(0----1)
+          @Override
+          protected void applyTransformation(float interpolatedTime, Transformation t) {
+              super.applyTransformation(interpolatedTime, t);
+              final Matrix matrix = t.getMatrix();
+              mCamera.save();
+              // 使用Camera设置Y轴方向的旋转角度
+              mCamera.rotateY(mRotateY * interpolatedTime);
+              // 将旋转变化作用到matrix上
+              mCamera.getMatrix(matrix);
+              mCamera.restore();
+      
+              // 通过pre方法设置矩阵作用前的偏移量来改变旋转中心
+              matrix.preTranslate(mCenterWidth, mCenterHeight);// 在旋转之前开始位移动画
+              matrix.postTranslate(-mCenterWidth, -mCenterHeight);// 在旋转之后开始位移动画
+          }
+      
+      }
+      ```
+
+    - 正常
+
+    ```java
+     AnimationSet animationSet = new AnimationSet(false);
+            animationSet.setFillAfter(true);
+    
+            TranslateAnimation translateAnimation = new TranslateAnimation(0, 500, 0, 500);
+            translateAnimation.setDuration(3000);
+            translateAnimation.setFillAfter(false);
+            translateAnimation.setStartTime(System.currentTimeMillis() + 5000);
+            animationSet.addAnimation(translateAnimation);
+    
+    
+            RotateAnimation rotateAnimation = new RotateAnimation(0f, 180f,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+            RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+            translateAnimation.setFillAfter(false);
+            rotateAnimation.setDuration(3000);
+            animationSet.addAnimation(rotateAnimation);
+    
+            handleView.startAnimation(animationSet);
+    ```
+
+  - How?
+
+    ​	每个View有一个 `Animation mCurrentAnimation` 对象，`View#startAnimation() ` 开始，重绘整个视图树，`View.draw(canvas)` 里面获取Animation然后初始化，利用消逝的时间和总时间 差值器(`Interploter`)计算出变化百分比，然后计算出属性的值，然后绘制Canvas。
+
+  - 缺点
+
+    ​	动画只改变了Canvas，并没有改变属性的值，所以事件分发响应的位置还是老位置
+
+- 属性动画
+
+  - What? 通过直接改变属性来完成动画
+
+  - 概念
+
+    - Interpolator (差值器)
+
+      ```java
+      float getInterpolation(float input) {
+              return input;
+          }
+      ```
+
+    - Evaluator (估值器)
+
+      `Object evaluate(float fraction, Object startValue, Object endValue)`
+
+  - Usage
+
+    ```java
+      ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(handleView, "translationX", 0, 300);
+            objectAnimator.start();
+    ```
+
+  - How? 
+
+    **Choreographer** 和 **VSnc** 垂直同步信号量回调
 
 ### Android优化
 
-### <a id="布局优化">`Q：布局上如何优化？`</a>
+#### <a id="布局优化">`Q：布局上如何优化？`</a>
 
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
@@ -1345,31 +1517,31 @@ unspecefic
 
 ### **其他**
 
-### <a id="kotlin">kotlin</a>
+#### <a id="kotlin">kotlin</a>
 
 [用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
 
-### <a id="异常">异常</a>
+#### 上传库到Maven
 
-- 分类
-  -  Error
-    - 错误，不能通过代码修复的，可以不用处理 
-    - 例子：`StackOverFlowError` `OutOfMemoryError`
-  -  Exception
-    - 执行异常（RuntimeException）
-      - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都**无需在`throws`**子句中进行声明
-      - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException` `ConcurrentModifyException`
-    - 检查异常（Checked Exceptions）
-      - 特点：一个方法**必须通过throws**语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
-      - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
+> 参考 [android上传库到maven中央](https://blog.csdn.net/fwt336/article/details/76078691)
+>
+> [Android将Library上传到jcenter超简单完整图文步骤以及遇到的各种坑](https://blog.csdn.net/linglongxin24/article/details/53415932)
+>
+> HTTP/1.1 404 Not Found [message:Repo 'maven' was not found] 
+>
+> [#使用bintray-release 上传Jcenter 所踩过的坑#](https://www.jianshu.com/p/26aa2dc59a0b)
+>
+> [新版Bintray网站发布Library到JCenter](https://www.jianshu.com/p/6a6eca8c24c4)
+
+
 
 ---
 
 ### **源码**
 
-### RecyclerView
+#### RecyclerView
 
 - 相对于ListView优点
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
@@ -1381,19 +1553,61 @@ unspecefic
 
 
 
-### Retrofit
+#### Retrofit
 
 [Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
 
-Rxjava
+#### Rxjava
 
-Glide
+#### Glide
 
-OKHttp
+#### OKHttp
 
-leacany
+#### leacany
 
 #### SurfaceView
+
+- Why?
+
+  View在主线程刷新，速度太慢，高频刷新场景需要SurfaceView
+
+- How?
+
+  1. 初始化SurfaceHolder
+  2. 添加SurfaceHolder.Callback2回调
+
+- 原理
+
+  ​	
+
+- 对比
+
+  | 名词     | View                                                         | SurfaceView                                                  | GLSurfaceView                                                |
+  | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | 概要     | 显示视图，内置画布，提供图形绘制函数，触屏事件，按键事件函数；*必须* 在UI线程中更新画面，速度较慢。 | 基于View视图进行拓展的视图类，更适合2D游戏的开发；是View的子类，类似双缓机制，在新的线程中更新画面，所以刷新界面速度比View快。（双缓机制：即前台缓存和后台缓存，后台缓存计算场景、产生画面，前台缓存显示后台缓存已画好的画面。） | 基于SurfaceView视图再次进行扩展的视图类，专用于3D游戏开发的视图；是SurfaceView的子类，OpenGL专用。（OpenGL：是一个开放的三维图形软件包。） |
+  | 刷新原理 | 主线程更新                                                   | SurfaceView可以通过SurfaceHolder.addCallback方法在子线程中更新UI。由于holder的存在，SurfaceView也不能进行像View一样的setAlpha和setRotation方法，但是对于一些类似于坦克大战等需要不断告诉更新画布的游戏来说，SurfaceView绝对是极好的选择。 | TextureView则可以通过TextureView.setSurfaceTextureListener在子线程中更新UI.但是比如视频播放器或相机应用的开发，TextureView则更加适合。 |
+
+- 参考
+
+  [Android面试题（29）-surfaceView与TextureView](https://blog.csdn.net/pgg_cold/article/details/79483731)
+
+
+
+GLSurfaceView
+
+> private GLThread mGLThread;
+>
+> private Renderer mRenderer;
+
+
+
+TextureView
+
+> TextureView 适用于**Android 4.0 和之后**的版本，在很多的情况下可以顺便作为 SurfaceView 的替代品来使用。TextureView 的行为更像传统的 View，可以对绘制在它上面的内容实现动画和变换。但要求运行它的环境是**硬件加速**的，这可能会导致某些应用程序的兼容性问题。应用程序在 SDK 为 11或以上的版本时，默认启动了硬件加速。（如果需要禁用硬件加速可在 AndroidManifest.xml 文件中的 <activity> 或整个 <application> 标签中添加 android:hardwareAccelerated="false"，即可。
+
+SurfaceTexture
+
+
 
 #### NestedParent和 NestedChild
 
@@ -1403,7 +1617,7 @@ leacany
 
 
 
-Service
+#### Service
 
 生命周期
 
@@ -1411,7 +1625,7 @@ Service
 
 
 
-ContentProvider
+### ContentProvider
 
 生命周期 
 
@@ -1419,19 +1633,21 @@ ContentProvider
 
 
 
-Broadcast 
+### Broadcast 
 
 启动过程
 
 
 
-SharePrefenrence 
+### **SharePrefenrence **
 
-背景：比contentProvider轻量级
+- **背景：**比contentProvider轻量级
 
-特点：线程安全、进程不安全
+- **特点：**线程安全、进程不安全
 
-为什么进程不安全？如何保证进程安全？
+- 为什么进程不安全？如何保证进程安全？
+
+  ​	进程不安全是因为sharePrefenrence里面有2种缓存，一个是内存的，一个是本地的，内存的缓存不能跨进程共享，所以A进程修改的数据并不能同步到B进程。
 
 
 
@@ -1452,3 +1668,26 @@ SharePrefenrence
 ####  `invalidate`原理
 
 `View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
+
+
+
+
+
+### 参考
+
+[Facebook面经记](https://blankj.com/2017/10/31/facebook-interview/)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
