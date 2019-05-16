@@ -246,7 +246,7 @@ public Destionation destionation(final String str) {
 * 成员变量 
   只能被初始化一次。
 
-## <a id="动态代理">动态代理</a>
+## <a id="动态代理">4.动态代理</a>
 - **好处：**
 
   ​	静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
@@ -342,7 +342,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
-### <a id="范型">范型</a>
+## <a id="范型">5.范型</a>
 
 - **背景**：如果没有范型，比如 `Object[] a = new String[100];`，你修改a的时候，比如放入`1`，取出来使用的时候，可能会抛出 `ClassCastException`
 
@@ -378,7 +378,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
-### <a id="容器">容器</a>
+## <a id="容器">6.容器</a>
 
 `ArrayList`
 
@@ -455,7 +455,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
-#### Iterator
+### Iterator
 
 - 出现背景：因为有迭代器，容器的遍历可以不考虑其存储结构，用迭代器的统一接口完成遍历.
 - 注意点：迭代的时候能够删除节点，但是不能新增节点，否则会抛出 `ConcurrentModifyException` 
@@ -517,7 +517,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
   - 多线程环境 `remove()`不能使用，因为不同线程遍历的时候生成了不同的 `Iterator`，也就是 `expectModCount` 是私有的，但是 `modCount` 是共有的，一个线程把 `modCount++` 了，另一个线程的 `expectModCount` 并不知道
   - 如何解决 1.在使用iterator迭代的时候使用synchronized或者Lock进行同步； 2.使用并发容器CopyOnWriteArrayList代替ArrayList和Vector。
 
-#### CopyOnWriteArrayList
+### CopyOnWriteArrayList
 
 [先简单说一说Java中的CopyOnWriteArrayList](https://juejin.im/post/5aaa2ba8f265da239530b69e)
 
@@ -528,7 +528,7 @@ public final class $Proxy0 extends Proxy implements IBossImpl {
 
 
 
-### <a id="枚举">枚举</a>
+## <a id="枚举">7.枚举</a>
 
 通过 `enum` 关键字声明，实际上会生成一个继承 `Enum` 类的子类，他是final的，其中通过 静态块完成 `static final` 成员变量的初始化操作，其中 `values()` 方法返回枚举数组，`valueOf(String name)` 方法通过遍历数组，通过名字查找枚举。枚举里面能够申明 `abstract` 方法，然后每个枚举对象就会重写这个方法，实际上编译器会给枚举添加 `abstract` 申明，然后每个枚举的常量其实是一个匿名类内部类。
 
@@ -595,7 +595,7 @@ public enum CustomEnum {
 
 
 
-#### <a id="异常">异常</a>
+## <a id="异常">8.异常</a>
 
 - 分类
   - Error
@@ -613,7 +613,7 @@ public enum CustomEnum {
 
 **Java其他**
 
-### <a id="final、finally、finalize()">final、finally、finalize()分别表示什么含义</a>
+## <a id="final、finally、finalize()">9.final、finally、finalize()分别表示什么含义</a>
 
 > - 技术点：final、finally、finalize()
 > - 参考回答：
@@ -633,9 +633,9 @@ public enum CustomEnum {
 
 ---
 
-##**Java并发编程**
+#**Java并发编程**
 
-### Q：什么是线程安全？保障线程安全有哪些手段？`
+## 1. Q：什么是线程安全？保障线程安全有哪些手段？`
 
 > 技术点：线程安全
 >
@@ -666,9 +666,9 @@ public enum CustomEnum {
 
 
 
-### <a id="线程">线程</a>
+## <a id="线程">2. 线程</a>
 
-#### <a id="Thread">Thread类(sleep、join、yield、interrupt)</a>
+### <a id="Thread">Thread类(sleep、join、yield、interrupt)</a>
 - sleep：暂停当前正在执行的线程；不释放锁（有限等待、native方法）
 
 - yield：释放当前线程CPU时间片，让他回到就绪状态，并执行其他线程；（native方法）
@@ -696,7 +696,7 @@ Thread thread2 = new Thread(){
   >
   >  **注意**：如果线程在`wait`状态，并且不能获取锁，`Interrupt` 没有反应
 
-#### <a id="Object类">Object类(wait、notify、notifyAll)</a>
+### <a id="Object类">Object类(wait、notify、notifyAll)</a>
 
 锁池：存放竞争锁的线程
 等待池：等待线程，当被唤醒的时候，会进入锁池(wait-set)
@@ -721,7 +721,7 @@ Thread thread2 = new Thread(){
 ![线程生命周期](https://img-blog.csdnimg.cn/20190313180412384.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190404163529864.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
-#### 相关问题：
+### 相关问题：
 
 `Wait和Sleep的区别`
 
@@ -734,7 +734,7 @@ Thread thread2 = new Thread(){
 
 
 
-### <a id="ThreadLocal">ThreadLocal</a>
+## <a id="ThreadLocal">3. ThreadLocal</a>
 ThreadLocal类
 
 - 背景：可实现线程本地存储的功能，把共享数据的可见范围限制在同一个线程之内，无须同步就能保证线程之间不出现数据争用的问题，这里可理解为ThreadLocal很方便的找到本线程的Looper。
@@ -742,7 +742,7 @@ ThreadLocal类
 - 原理：每个线程的Thread对象中都有一个ThreadLocalMap 对象`ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue)`，它存储了一组以ThreadLocal.threadLocalHashCode为key、以本地线程变量为value的键值对，而ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，也就包含了一个独一无二的threadLocalHashCode值，通过这个值就可以在线程键值值对中找回对应的本地线程变量。
   需要注意的点就是ThreadLocal的Entry使用的是弱引用，是因为ThreadLocal变量会被线程一直持有，容易造成内存泄露 ，所以使用弱引用。
 
-### <a id="Synchronized">synchronized</a>
+## <a id="Synchronized">4. synchronized</a>
 
 - **背景** 多线程安全的三个特性，原子性（保证线程执行完才能执行其他线程）、可见性（`synchronized执行完之前把工作内存的值写回主存`）、有序性
 
@@ -771,11 +771,11 @@ ThreadLocal类
 
 - 参考 [java多线程系列(五)---synchronized ReentrantLock volatile Atomic 原理分析](http://www.cnblogs.com/-new/p/7326820.html)
 
-### 扩展
+## 5. 扩展
 
 ---
 
-#### 1. [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
+### 1. [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
 
 - 线程饥饿 
   - 背景
@@ -785,7 +785,7 @@ ThreadLocal类
   - 解决 **Lock公平锁**
   - 参考 [线程饥饿](<https://cloud.tencent.com/developer/article/1193092>)
 
-#### 2. 无锁状态、偏向锁、轻量级锁、重量级锁
+### 2. 无锁状态、偏向锁、轻量级锁、重量级锁
 
 - 偏向锁
 
@@ -825,7 +825,7 @@ ThreadLocal类
 
 [java锁偏向锁](<https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/>)
 
-### JIT(HotSpot 虚拟机)
+## 6. JIT(HotSpot 虚拟机)
 
 - 背景：加速热点代码的运行
 
@@ -835,7 +835,7 @@ ThreadLocal类
 
 ---
 
-
+## 7. Lock
 
 ### <a id="ReentrantLock">ReentrantLock</a>
 
@@ -1001,7 +1001,7 @@ ThreadLocal类
 
 
 
-### <a id="volatile">`volatile`</a>
+## <a id="volatile">8. volatile</a>
 
 (背景) `volatile` 的引入保证了线程并发的可见性。
 
@@ -1021,7 +1021,7 @@ ThreadLocal类
 
 ![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1554958780132&di=882d13580a89f9e483259ba19d8674a1&imgtype=0&src=http%3A%2F%2Fwx2.sinaimg.cn%2Fmw690%2F006Xp67Kly1fq13iwg31vj30mp09jtbz.jpg)
 
-### <a id="cas">CAS (compare and swap)</a>
+## <a id="cas">9. CAS (compare and swap)</a>
 
 - 背景
 
@@ -1059,7 +1059,7 @@ ThreadLocal类
 
 
 
-### <a id="线程池">线程池</a>
+## <a id="线程池">10. 线程池</a>
 
 - 背景：线程池主要是为了解决**频繁创建线程的CPU和资源开销**，还可以**控制最大的线程数量**，核心的线程数量，回收线程，队列化的处理，还有拒绝策略
 - 使用：核心线程数，最大线程数，回收时间、拥塞队列、线程工厂、拒绝Handler
@@ -1176,9 +1176,9 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 ---
 
-### Android
+# Android
 
-### Handler
+## 1. Handler
 
 1. Handler通过 `sendMessage()` 发送Message到MessageQueue队列；
 
@@ -1194,7 +1194,7 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 ![handler_java](http://gityuan.com/images/handler/handler_java.jpg)
 
-##### Looper
+### Looper
 
 ```java
 //1.初始化Looper对象到线程本地变量
@@ -1222,7 +1222,7 @@ public void quit() {
 
 ```
 
-##### MessageQueue
+### MessageQueue
 
 ```java
 // 1.获取消息 
@@ -1239,7 +1239,7 @@ Message next(){}
 
 
 
-#### epoll
+### epoll
 
 ```c++
 void Looper::rebuildEpollLocked() {
@@ -1274,11 +1274,11 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ```
 
-##### 参考
+参考
 
 [Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
 
-### Binder
+## 2. Binder
 
 - **Why?** 
 
@@ -1321,7 +1321,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-### App启动流程
+## 3. App启动流程
 
 - 主流程
   1. **Pause上一个Activity**，比如Launcher
@@ -1335,25 +1335,49 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-### 绘制机制
+## 4. 绘制机制
 
-##### MeasureSpec
 
-unspecefic
+
+
 
 ![å¾3ï¼Androidç»å¶æºå¶_åå¾.jpg](https://upload-images.jianshu.io/upload_images/2911038-2922d52fe51235af.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-### 事件传递机制
+### MeasureSpec
+
+​	unspecefic
+
+### `invalidate()`原理
+
+​	`View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
+
+### requestLayout() 原理
+
+
+
+
+
+## 5. 事件传递机制
 
 ![image-20190418151849681](picture/image-20190418151849681.png)
 
-##### ![image-20190418151939418](picture/image-20190418151939418.png)InputManagerService
+### ![image-20190418151939418](picture/image-20190418151939418.png)
+
+### InputManagerService
 
 [十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
 
 
 
-### 动画机制
+## 6. 图片相关
+
+### Gif图的加载
+
+- 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+
+
+
+## 7. 动画机制
 
 - **帧动画** (AnimationDrawable)
 
@@ -1501,9 +1525,9 @@ unspecefic
 
     **Choreographer** 和 **VSnc** 垂直同步信号量回调
 
-### Android优化
+# Android优化
 
-#### <a id="布局优化">`Q：布局上如何优化？`</a>
+## <a id="布局优化">`Q：布局上如何优化？`</a>
 
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
@@ -1515,15 +1539,15 @@ unspecefic
 
 ---
 
-### **其他**
+# **其他**
 
-#### <a id="kotlin">kotlin</a>
+## <a id="kotlin">kotlin</a>
 
 [用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
 
-#### 上传库到Maven
+## 上传库到Maven
 
 > 参考 [android上传库到maven中央](https://blog.csdn.net/fwt336/article/details/76078691)
 >
@@ -1539,33 +1563,23 @@ unspecefic
 
 ---
 
-### **源码**
+# **源码**
 
-#### RecyclerView
-
-- 相对于ListView优点
-  - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
-  - 支持单个Item刷新
-- LayoutManager
-- ItemDecoration
-
-[RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
-
-
-
-#### Retrofit
+## 1. Retrofit
 
 [Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
 
-#### Rxjava
+## 2. Rxjava
 
-#### Glide
+## 3. Glide
 
-#### OKHttp
+## 4. OKHttp
 
-#### leacany
+## 5. leacany
 
-#### SurfaceView
+## 6. 视图
+
+### SurfaceView
 
 - Why?
 
@@ -1609,15 +1623,29 @@ SurfaceTexture
 
 
 
-#### NestedParent和 NestedChild
+### NestedParent和 NestedChild
 
-#### CoordinatorLayout和Behivor(协同布局)
+### CoordinatorLayout和Behivor(协同布局)
 
-#### ConstaintLayout(约束布局)
+### ConstaintLayout(约束布局)
+
+### RecyclerView
+
+- 相对于ListView优点
+  - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
+  - 支持单个Item刷新
+- LayoutManager
+- ItemDecoration
+
+[RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
 
 
-#### Service
+
+
+## 7. 系统组件
+
+### Service
 
 生命周期
 
@@ -1653,27 +1681,17 @@ SurfaceTexture
 
 
 
+# **计算机网络**
 
 
 
-
-### 图片相关
-
-#### Gif图的加载
-
-- 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
-
-###  <a id="View相关">View相关</a>
-
-####  `invalidate`原理
-
-`View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
+# **操作系统**
 
 
 
 
 
-### 参考
+# 参考
 
 [Facebook面经记](https://blankj.com/2017/10/31/facebook-interview/)
 
