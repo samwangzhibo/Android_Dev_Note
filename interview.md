@@ -77,6 +77,10 @@
 - [死锁](#死锁)
 
 ---
+**算法**
+
+
+
 # Java基础
 
 ---
@@ -773,8 +777,6 @@ ThreadLocal类
 
 ## 5. 扩展
 
----
-
 ### 1. [非公平锁与公平锁](<https://www.jianshu.com/p/f584799f1c77>)
 
 - 线程饥饿 
@@ -1361,7 +1363,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ![image-20190418151849681](picture/image-20190418151849681.png)
 
-### ![image-20190418151939418](picture/image-20190418151939418.png)
+![image-20190418151939418](picture/image-20190418151939418.png)
 
 ### InputManagerService
 
@@ -1525,13 +1527,53 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
   
   
   
-  ## 8. 图片相关
-  
-  ### Gif图的加载
-  
-  - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+  扩展
 
-## 8. 性能优化
+### Airbnb 动画库Lottie
+
+是什么？
+
+​	把AE导成Android、iOS原生动画
+
+怎么用？
+
+```java
+LottieAnimationView animationView = (LottieAnimationView) findViewById(R.id.animation_view);
+animationView.setAnimation("hello-world.json");
+animationView.loop(true);
+```
+
+优缺点
+
+​	只是播放动画，如果需要根据百分比展示，需要调研下
+
+关键模块与类
+
+​	
+
+原理
+
+1. 适配原理
+
+2. 绘制原理
+
+3. 动画原理
+
+   
+
+参考
+
+[Airbnb 动画库Lottie](https://www.jianshu.com/p/19106e3d07b2)
+
+[Android 之 Lottie 实现炫酷动画背后的原理](https://mp.weixin.qq.com/s/i_8wnO45dzZ_DtkBLabYuA)
+
+## 8. 图片相关
+
+### Gif图的加载
+
+- 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+
+## 9. 性能优化
 
 ### <a id="布局优化">布局优化</a>
 
@@ -1545,53 +1587,31 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ### 启动优化
 
+1. 区分进程 
+
+2. 子线程异步初始化资源，服务按需加载、service初始化后延
+
+3. 线程控制，对于不重要的线程，降低优先级
+
+4. 资源读取：
+   1. sharepreference 
+      1. sharepreference commit是阻塞的api，会返回是否修改成功，如果不关注修改结果，用apply代替，apply是同步修改内存的值，singleThreadPool 异步修改到本地
+      2. sp如果过大，做拆分操作
+   2. asset读取资源异步化
+5. 首屏优化(LayoutInflator)，预取下个页面的View
+6. 虚拟机优化
+
+
+
 ### 绘制优化
 
 
 
----
-
-# **其他**
-
-## <a id="kotlin">kotlin</a>
-
-[用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
 
 
+## 10. 视图
 
-## 上传库到Maven
-
-> 参考 [android上传库到maven中央](https://blog.csdn.net/fwt336/article/details/76078691)
->
-> [Android将Library上传到jcenter超简单完整图文步骤以及遇到的各种坑](https://blog.csdn.net/linglongxin24/article/details/53415932)
->
-> HTTP/1.1 404 Not Found [message:Repo 'maven' was not found] 
->
-> [#使用bintray-release 上传Jcenter 所踩过的坑#](https://www.jianshu.com/p/26aa2dc59a0b)
->
-> [新版Bintray网站发布Library到JCenter](https://www.jianshu.com/p/6a6eca8c24c4)
-
-
-
----
-
-# **源码**
-
-## 1. Retrofit
-
-[Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
-
-## 2. Rxjava
-
-## 3. Glide
-
-## 4. OKHttp
-
-## 5. leacany
-
-## 6. 视图
-
-### SurfaceView
+### 1. SurfaceView
 
 - Why?
 
@@ -1608,9 +1628,9 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 - 对比
 
-  | 名词     | View                                                         | SurfaceView                                                  | GLSurfaceView                                                |
+  | 名词     | View                                                         | SurfaceView                                                  | TextureView                                                  |
   | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-  | 概要     | 显示视图，内置画布，提供图形绘制函数，触屏事件，按键事件函数；*必须* 在UI线程中更新画面，速度较慢。 | 基于View视图进行拓展的视图类，更适合2D游戏的开发；是View的子类，类似双缓机制，在新的线程中更新画面，所以刷新界面速度比View快。（双缓机制：即前台缓存和后台缓存，后台缓存计算场景、产生画面，前台缓存显示后台缓存已画好的画面。） | 基于SurfaceView视图再次进行扩展的视图类，专用于3D游戏开发的视图；是SurfaceView的子类，OpenGL专用。（OpenGL：是一个开放的三维图形软件包。） |
+  | 概要     | 显示视图，内置画布，提供图形绘制函数，触屏事件，按键事件函数；**必须** 在UI线程中更新画面，速度较慢。 | 基于View视图进行拓展的视图类，更适合2D游戏的开发；是View的子类，类似**双缓机制**，在新的线程中更新画面，所以刷新界面速度比View快。（双缓机制：即前台缓存和后台缓存，后台缓存计算场景、产生画面，前台缓存显示后台缓存已画好的画面。） |                                                              |
   | 刷新原理 | 主线程更新                                                   | SurfaceView可以通过SurfaceHolder.addCallback方法在子线程中更新UI。由于holder的存在，SurfaceView也不能进行像View一样的setAlpha和setRotation方法，但是对于一些类似于坦克大战等需要不断告诉更新画布的游戏来说，SurfaceView绝对是极好的选择。 | TextureView则可以通过TextureView.setSurfaceTextureListener在子线程中更新UI.但是比如视频播放器或相机应用的开发，TextureView则更加适合。 |
 
 - 参考
@@ -1625,7 +1645,9 @@ GLSurfaceView
 >
 > private Renderer mRenderer;
 
+​	基于SurfaceView视图再次进行扩展的视图类，专用于3D游戏开发的视图；是SurfaceView的子类，OpenGL专用。（OpenGL：是一个开放的三维图形软件包。）
 
+​	封装了一下GL的 SurfaceView，内部有一个GLThread，对外实现就是传入一个Render对象。
 
 TextureView
 
@@ -1635,17 +1657,24 @@ SurfaceTexture
 
 
 
-### NestedParent和 NestedChild
+### 2. NestedParent和 NestedChild
 
-### CoordinatorLayout和Behivor(协同布局)
 
-### ConstaintLayout(约束布局)
 
-### RecyclerView
+### 3. CoordinatorLayout和Behivor(协同布局)
+
+
+
+### 4. ConstaintLayout(约束布局)
+
+
+
+### 5. RecyclerView
 
 - 相对于ListView优点
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
   - 支持单个Item刷新
+  - 默认封装ViewHolder操作
 - LayoutManager
 - ItemDecoration
 
@@ -1655,7 +1684,7 @@ SurfaceTexture
 
 
 
-## 7. 系统组件
+## 11. 系统组件
 
 ### Service
 
@@ -1691,21 +1720,191 @@ SurfaceTexture
 
 
 
+## 11. 热修复与插件化
 
+### 热修复
+
+what?
+
+​	因为安卓的发版是
+
+原理
+
+​	把补丁的代码插入到**dexElements前面**
+
+问题
+
+**is_preverify 预验证 给每个class添加一个对其他dex的class的引用**
+
+
+
+ 参考：
+
+[Android 热修复原理篇及几大方案比较 - CSDN博客](https://juejin.im/entry/5b7bdd35e51d4538807130e4)
+
+[gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
+
+### 插件化
+
+参考：
+
+https://www.infoq.cn/article/android-plug-ins-from-entry-to-give-up
+
+https://zhuanlan.zhihu.com/p/27080871
+
+
+
+资源加载(构建Resource, 获取R文件中资源的Id, 通过id获取资源)
+
+参考：
+
+https://www.jianshu.com/p/c228fbd2bd85
+
+https://www.jianshu.com/p/913330114752
+
+https://juejin.im/entry/5c008cbf51882531b81b0cb8
+
+
+
+# **其他**
+
+## <a id="kotlin">kotlin</a>
+
+[用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
+
+
+
+## 代码生成
+
+### ASM
+
+背景：动态修改字节码的功能
+
+特点：
+
+使用：
+
+参考资料:
+
+[Java动态代理机制详解（JDK 和CGLIB，Javassist，ASM）](https://blog.csdn.net/luanlouis/article/details/24589193)
+
+[**Java字节码处理框架ASM设计思想解析**](https://www.jianshu.com/p/26e99d39b3fb)
+
+
+
+
+
+## 应用双开
+
+[APK多开原理](http://gnaixx.cc/2016/04/11/android-multi_apk/)
+
+1.修改apk applicationId 2个应用包名
+
+2.
+
+
+
+## 直播
+
+[超百万观众同场看直播秒开不卡顿，快手是如何做到的？|首次披露](https://www.infoq.cn/article/2017/09/streaming-Pipeline-kuaishou)
+
+
+
+## 上传库到Maven
+
+> 参考 [android上传库到maven中央](https://blog.csdn.net/fwt336/article/details/76078691)
+>
+> [Android将Library上传到jcenter超简单完整图文步骤以及遇到的各种坑](https://blog.csdn.net/linglongxin24/article/details/53415932)
+>
+> HTTP/1.1 404 Not Found [message:Repo 'maven' was not found] 
+>
+> [#使用bintray-release 上传Jcenter 所踩过的坑#](https://www.jianshu.com/p/26aa2dc59a0b)
+>
+> [新版Bintray网站发布Library到JCenter](https://www.jianshu.com/p/6a6eca8c24c4)
+
+
+
+# **源码**
+
+## 1. Retrofit
+
+[Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
+
+## 2. Rxjava
+
+## 3. Glide
+
+## 4. OKHttp
+
+## 5. leacany
+
+# 泛前端
+
+## Flutter
+
+[flutter.md](flutter.md)
 
 # **计算机网络**
 
+[network.md](network.md)
 
+[Awesome-Android-Interview]([https://github.com/JsonChao/Awesome-Android-Interview/blob/master/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E7%BD%91%E7%BB%9C%E9%9D%A2%E8%AF%95%E9%A2%98.md](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md))
 
 # **操作系统**
 
+### linux的进程调度算法 cow机制  
 
+参考:
+
+[COW奶牛！Copy On Write机制了解一下](https://juejin.im/post/5bd96bcaf265da396b72f855)
+
+### 虚拟内存的三级页表机制、缺页机制
+
+### epoll pipe
+
+select poll epoll 区别
+
+
+
+还有elf hook，进程内存区域，brk，fork clone等 
+
+# 汇编
+
+apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b 的跳转范围
+
+
+
+# 编译原理
+
+
+
+# 算法
+
+## 数组相关
+
+参考
+
+[剑指offer](https://github.com/LRH1993/android_interview)
 
 
 
 # 参考
 
 [Facebook面经记](https://blankj.com/2017/10/31/facebook-interview/)
+
+[Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview)
+
+[**Android-ReadTheFuckingSourceCode**](https://github.com/jeanboydev/Android-ReadTheFuckingSourceCode)
+
+[**android_interview** gitbook](https://github.com/LRH1993/android_interview)
+
+[刁钻题加证明](https://github.com/helen-x/AndroidInterview)
+
+[拆的比较细 适合简单过一下](https://github.com/CyC2018/CS-Notes)
+
+
+
+
 
 
 
