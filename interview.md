@@ -1148,6 +1148,10 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
   - 非核心线程如何进行回收？
 
+- 参考
+
+  [Java ThreadPoolExecutor线程池学习笔记(使用、原理、常见问题总结)-这一篇就够了](https://blog.csdn.net/wangzhibo666/article/details/88305797)
+
   
 
 额外
@@ -1346,21 +1350,195 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ## 4.View绘制机制
 
+### **重要概念**
+
+**ViewRootImpl**
+
+> 绘制的主流程类，什么invalidate()和requestLayout()最后都是让它去执行。
+>
+> 执行流程：自DecorView(根View)起，找它的ChildView执行(递归)
+>
+> 比如，onMeasure的时候，先执行DecorView的`onMeasure()`，之后遍历子View的`onMeasure`，直到所有的View都执行了`onMeasure()`
 
 
 
+**DecorView**
+
+> 就是一个FrameLayout，与FrameLayout相比，增加了WindowCallback的回调(需要与window交互，有概念就行)
+
+
+
+**Window**
+
+> 抽象的概念，PhoneWindow是它的唯一实现类。
+
+Window实际上是View的直接管理者。 
+
+1. 不管是Activity、Dialog还是Toast，它们的视图实际上都是附加在Window上的。
+2. View是Android中呈现视图的方式，但是View不能单独存在，必须附着在Window这个抽象的概念上。Android中的所有视图都是通过Window来实现的,有视图的地方就有Window。
+
+- 问题1：为什么有View还需要Window
+
+  View只关注视图的展示，比如视图多大 `onMeasure()`、视图放在哪 `onLayout()`
+
+  视图怎么画 `onDraw()`，而Window(如PhoneWindow)需要关注一些手势事件的接收分发、一些按键的分发、主题啥的
+
+PhoneWindow
+
+> 一种Window，每个Activity attach context的时候才创建的，具体时机看参考资料
+
+
+
+**WindowManager**
+
+> 抽象的概念，实现类是**WindowManagerImpl**， 最后又是通过WindowManagerGlobal去处理。
+>
+> 提供`addView()`、`removeView()`、`updateView()`，实际上最后时候 WindowManagerService(WMS)通过binder的IPC通信
+
+
+
+**Activity**
+
+> 1. 系统抽象的组件，由ActivityManagerService(AMS)管理，比如跳转其他Activity，实际上是调用AMS的`startActivity()`方法，
+>
+> 2. 提供生命周期，onCreate()、onStart() 等，提供Window的事件处理功能回调 dispatchTouchEvent()，不负责View
+>
+>    的绘制相关功能。
+
+
+
+**WindowManagerService**
+
+> 系统的服务，其实就是在system_server系统进程里面的一个对象，和ActivityManagerService(管4大组件启动、生命周期、切换)、PackageManagerService(管解析apk包信息，安装的时候用)称为三大Service
+
+
+
+**参考资料**：
+
+[5分钟告诉你，Activity的视图绘制流程(onMeasure、onLayout、onDraw的调用和参数解释)](https://blog.csdn.net/wangzhibo666/article/details/86656675)
+
+
+
+**流程图**(看不懂无所谓):
 
 ![å¾3ï¼Androidç»å¶æºå¶_åå¾.jpg](https://upload-images.jianshu.io/upload_images/2911038-2922d52fe51235af.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-### MeasureSpec
 
-​	unspecefic
 
-### `invalidate()`原理
+### ViewRootImpl的创建
 
-​	`View#invalidate()` -> `View#invalidateInternal` -> `ViewGroup#invalidateChild()` -> `ViewGroup#invalidateChildInParent` ->  `ViewRootImpl#scheduleTraversals()`
+applicationThread.scheduleLaunchActivity  ->  ActivityThread.LaunchActivity  ->  Activity.attach(创建phoneWindow)  -> Activity.onCreate(setContentView，生成DecorView，解析layout文件并添加到contentView里面，构建视图树) 
 
-### requestLayout() 原理
+->  ActivityThread.perfromResumeActivity -> windownManager.addView(创建viewRootImpl) -> windowGlobal.addView() ->  ViewRootImpl.requestLayout ->  ViewRootImpl.performTraversal
+
+### 测量
+
+#### **执行流程**
+
+ViewRootImpl.performTraversal -> performMeasure(根measureSpec，由window的大小和decorView的layoutParams计算出) -> DecorView(View).measure -> 
+
+FrameLayout.onMeasure  ->   ViewGroup.measurechild(父布局的measpec和子布局的layoutparams计算出来的measureSpec) -> View.measure  -> View.onMeasure()
+
+#### 参数解释
+
+`onMeasure(widthMeasureSpec, heightMeasureSpec)`
+
+​	widthMeasureSpec和heightMeasureSpec是由父布局的measpec和子布局的layoutparams计算出来的measureSpec
+
+**MeasureSpec**
+
+> 是一个32位的数，前2位是mode(Unspecified、Exactly、AtMost)，后30位是size
+
+mode解释
+
+- Unspecified: 未指定，比如ScrollView不指定View的高度
+
+- Exactly：确定的，比如match_parent，parent是100dp的话，你也是100dp，所以就是确定的
+
+- AtMost：不要超过父布局，比如wrap_content，不知道自己有多大，限制不要超过父布局，这种情况比如TextView的 wrap_content，我们在`onMeasure(widthMeasureSpec, heightMeasureSpec)`中判断是AtMost，我们就使用TextView画笔一个字的高度做高，`字数 * 字宽`作为TextView的宽。
+
+#### 自定义方法
+
+​	这个方法就是要测量宽高，有几种修改宽高的方法
+
+1. 自己合成MeasureSpec再交给方法
+
+   ``` java
+     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+       // 强行把宽度设置成4000px
+       measureSpec = MeasureSpec.makeMeasureSpec(4000, MeasureSpec.EXACTLY);
+       super.onMeasure(measureSpec, measureSpec);
+     }
+   ```
+
+2. 自己设置宽高
+
+   ```java
+       protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+         // 按照自己的规则计算宽度
+         mWidth = getMySize(widthMeasureSpec, mWidth);
+         mHeight = getMySize(heightMeasureSpec, mHeight);
+         // 实际控制视图宽高的方法
+         setMeasuredDimension(mWidth, mHeight);
+       }
+   ```
+
+
+
+#### 调试技巧
+
+​	打日志的话，直接去measureSpec调用`getSize()` 和 `getMode()` 看宽高是否有问题
+
+### 布局
+
+#### 执行流程：
+
+ViewRootImpl.performTraversal -> ViewRootImpl.performLayout() -> DecorView(View).layout(父布局中的left,top,right,bottom) -> 
+
+DecorView.onLayout()子类重写 -> FrameLayout.onLayout() -> getChildAt(i).layout() -> View.layout -> View.onLayout(在frameLayout中的left)
+
+
+
+
+
+
+
+
+
+### 绘制
+
+ViewRootImpl.performTraversal -> viewRootImpl.performDraw() -> viewRootImpl.draw() -> viewRootImpl.drawSoftWare() -> DecorView.draw(canvas来至surface.unlockCanvas(dirty)) -> View.draw() 
+
+-> View.drawBackground(canvas)  backgroundDrawable.draw(canvas)
+
+
+
+### 相关方法源码
+
+**invalidate()原理**
+
+- 调用链
+
+  ​	 View#`invalidate()` -> View#`invalidateInternal` -> ViewGroup#`invalidateChild()` -> ViewGroup#`invalidateChildInParent` ->  ViewRootImpl#`scheduleTraversals()`
+
+- 总结
+
+  ​	View调用invalidate()重绘，然后调用父View的invalidate()，最后到DecorView的invalidate()，DecorView又调用ViewRootImpl
+
+**requestLayout() 原理**
+
+​	requestLayout()会调用父类的 requestLayout() 并且重置Layout的Flag，父类的requestLayout()又调用它父类的requestLayout()，这是一个责任链模式，最终调用DecorView的requestLayout()，DecorView的parent其实是ViewRootImpl， ViewRootImpl类requestLayout()—scheduleTraversals()—doTraversal()—performTraversals()，然后刚刚重置了标志位，所以不会走缓存。
+
+
+
+## 4.1 显示系统
+
+> 这章主要是讲解framework层面，为啥canvas draw()了之后，就能显示到屏幕上了，包括60s渲染一次是谁控制的，OpenGl是怎么调用的，扩展讲一下CPU GPU双缓冲机制，这一块和SurfaceView和紧耦合
+
+
+
+
 
 
 
@@ -1692,6 +1870,65 @@ SurfaceTexture
 
 
 ## 11. 系统组件
+
+### Activity
+
+> 1. 系统抽象的组件，又ActivityManagerService(AMS)管理，比如跳转其他Activity，实际上是调用AMS的`startActivity()`方法，
+> 2. 提供生命周期，onCreate()、onStart() 等，提供Window的事件处理功能回调 dispatchTouchEvent()，但是没有View的绘制功能。
+
+- 启动过程
+
+  [从源码角度分析Activity的生命周期时序怎么触发的(onCreate onStart onResume onPause onStop onDestroy)(附测试代码)](https://blog.csdn.net/wangzhibo666/article/details/86646776)
+
+
+
+### Fragment
+
+> 其实就是View，所以可以在任何地方替换，比Activity更方便，由FragmentManager管理其生命周期，然后和Activity生命周期联动了
+
+- 背景
+
+  ​	Activity不够模块化，比如要登录页和注册页切换，Activity太重了。解决方案就是把功能性相关的代码写在一起，就是View和Model(视图的处理，拉取网络刷新View)，然后给他起一个名字，就叫Fragment，他是碎片，可以拼凑在一起给Activity用
+
+- 使用
+
+  ​	
+
+- 缺点
+
+  ​	Fragment之间切换的时候，转场动画不好处理，如果是Activity只需要设置Window出来的动画就行。
+
+- 坑
+
+  1. java.lang.IllegalStateException: Fragment has not been attached yet.
+
+     原因是fragment已经detach出Activity了，判断 Fragment#`isAdded())`
+
+  2. **getActivity()空指针**
+
+     1. 原因
+
+        可能你遇到过getActivity()返回null，或者平时运行完好的代码，在“内存重启”之后，调用getActivity()的地方却返回null，报了空指针异常。
+
+        ​     大多数情况下的原因：你在调用了getActivity()时，当前的Fragment已经`onDetach()`了宿主Activity。比如：你在pop了Fragment之后，该Fragment的异步任务仍然在执行，并且在执行完成后调用了getActivity()方法，这样就会空指针。
+
+     2. 解决方案
+
+        ​	在Fragment基类里设置一个Activity mActivity的全局变量，在`onAttach(Activity activity)`里赋值，使用mActivity代替`getActivity()`，保证Fragment即使在`onDetach`后，仍持有Activity的引用（有引起内存泄露的风险，但是异步任务没停止的情况下，本身就可能已内存泄漏，相比Crash，这种做法“安全”些），即：
+
+     ![img](https://ask.qcloudimg.com/http-save/yehe-2802329/qn4smhvxb5.jpeg?imageView2/2/w/1620)
+
+  3. **Can not perform this action after onSaveInstanceState**
+
+     ​	
+
+
+
+- 参考
+
+  [Fragment全解析系列（一）：那些年踩过的坑](https://cloud.tencent.com/developer/article/1179427)
+
+  [Android 坑档案：背黑锅的 Fragment](https://zhuanlan.zhihu.com/p/20660984)
 
 ### Service
 
