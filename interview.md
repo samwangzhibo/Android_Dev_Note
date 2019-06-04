@@ -192,7 +192,9 @@ void a();
   比如View的layout方法，主要也是做一些缓存的功能，会去看布局是否变化，如果变化了才去调用 `onLayout` 布局。其中的l、t、r、b参数，最开始是由 `ViewRootImpl` 的 `performLayout` 里面调用 `DecorView` 的 `layout` 方法，传递的参数是子布局在父布局里面的位置，这里是 `DecorView` 在 `PhoneWindow` 里面的位置。
   比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
 - 修饰变量（说明final变量引用指向的对象地址不能变）
-  * 局部变量
+  - 成员变量 
+    只能被初始化一次。
+  - 局部变量
     主要是局部内部类或者是匿名内部类使用，因为方法在调用完成之后会出栈，然后形参和局部变量就失效，因为变量需要给匿名内部类使用，所以声明成 `final` ，让它指向的地址不能变。如果 `final` 变量是基础类型，编译的时候就确定，直接替换成基础的确认的值，如果是引用，会把引用通过构造函数传进来。
 ```java
 public Destionation destionation(final String str) {
@@ -247,8 +249,13 @@ public Destionation destionation(final String str) {
 }
 ```
 
-* 成员变量 
-  只能被初始化一次。
+- 扩展
+
+  防止重排序 cpu总线 内存屏障
+
+  [jvm内存模型 重排序 内存屏障](https://www.cnblogs.com/flystar32/p/6684593.html)
+
+
 
 ## <a id="动态代理">4.动态代理</a>
 - **好处：**
@@ -1844,6 +1851,10 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 [flutter.md](flutter.md)
 
+# 设计模式
+
+
+
 # **计算机网络**
 
 [network.md](network.md)
@@ -1903,6 +1914,12 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 [拆的比较细 适合简单过一下](https://github.com/CyC2018/CS-Notes)
 
 
+
+3年高手
+
+[抖音3年高手脑图大概](/脑图/抖音3年的脑图大概.jpg)
+
+[抖音3年高手脑图详细](/脑图/抖音3年的脑图详细.png)
 
 
 
