@@ -1867,6 +1867,62 @@ SurfaceTexture
 
 
 
+### 6. View、Dialog、PopUpWindow、Fragment、Activity
+
+#### Dialog还是PopUpWindow?
+
+|          | PopUpWindow                                                  | Dialog                                                       |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 设置宽高 | Popupwindow在显示之前**一定要设置宽高**                      | Dialog无此限制                                               |
+| back     | Popupwindow默认**不会响应物理键盘的back**，除非显示设置了popup.setFocusable(true); | 会                                                           |
+| 添加蒙层 | **不会**给页面其他的部分**添加蒙层**                         | 会                                                           |
+| 标题     | 没有标题                                                     | Dialog默认有标题，可以通过dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);取消标题 |
+| Gravity  | 设置                                                         | Dialog默认是Gravity.CENTER。                                 |
+
+
+
+#### DialogFragment
+
+> 对外暴露 `onCreateDialog(Bundle savedInstanceState)` 方法
+
+- 背景
+
+  ​	因为普通的Dialog在Activity重建的时候，需要手动去管理。有没有一种不用手动管理的方式呢？
+
+- 原理
+
+  ​	就是一个Fragment，创建了一个Dialog，然后onStart()的时候，会去显示Dialog(`dialog.show()`)，通过 Fragment 来和Activity生命周期联动
+
+- 适用场景
+
+  ​	比如activity关闭的时候，dialog要关闭，activity横竖屏切换，dialog还要恢复的场景，直接用，dialogFragment给你处理了
+
+- 使用
+
+   1. 重写onCreateDialog
+
+      ``` java
+      public Dialog onCreateDialog(Bundle savedInstanceState) {
+          return new Dialog(getActivity(), getTheme());
+      }
+      ```
+
+   2. 当成普通Fragment使用，提交事务
+
+      ```  java
+      FragmentTransaction transaction = manager.beginTransaction();
+      transaction.add(fragment, tag);
+      transaction.commitAllowingStateLoss();
+      ```
+
+- 参考
+
+  ​	[还在用Dialog吗——DialogFragment带你体验完美高效率](https://blog.csdn.net/androidstarjack/article/details/73824885)
+
+  ​	[Dialog和PopUpWindow的抉择](https://www.jianshu.com/p/e588d74b5c9f)
+
+
+
 
 
 ## 11. 系统组件
@@ -1892,7 +1948,26 @@ SurfaceTexture
 
 - 使用
 
-  ​	
+  1. 自定义Fragment
+
+     ``` java
+     class LivePlayFragment extends Fragment{
+       View mRootView;
+     
+       View onCreateView(){
+         if(mRootView == null){
+           initRootView();
+         }
+         return mViewRoot;
+       }
+     }
+     ```
+
+     2. 通过FragmentManager添加
+
+        ``` java
+        getSupportFragmentManager().beginTransaction().replace(getContainerId(), fragment).commitAllowingStateLoss();
+        ```
 
 - 缺点
 
@@ -1906,11 +1981,11 @@ SurfaceTexture
 
   2. **getActivity()空指针**
 
+     >  	可能你遇到过getActivity()返回null，或者平时运行完好的代码，在“内存重启”之后，调用getActivity()的地方却返回null，报了空指针异常。
+
      1. 原因
 
-        可能你遇到过getActivity()返回null，或者平时运行完好的代码，在“内存重启”之后，调用getActivity()的地方却返回null，报了空指针异常。
-
-        ​     大多数情况下的原因：你在调用了getActivity()时，当前的Fragment已经`onDetach()`了宿主Activity。比如：你在pop了Fragment之后，该Fragment的异步任务仍然在执行，并且在执行完成后调用了getActivity()方法，这样就会空指针。
+        ​     你在调用了getActivity()时，当前的Fragment已经`onDetach()`了宿主Activity。比如：你在pop了Fragment之后，该Fragment的异步任务仍然在执行，并且在执行完成后调用了getActivity()方法，这样就会空指针。
 
      2. 解决方案
 
@@ -1920,7 +1995,83 @@ SurfaceTexture
 
   3. **Can not perform this action after onSaveInstanceState**
 
-     ​	
+     1. 原因
+
+        ​	在你离开当前Activity等情况下，系统会调用`onSaveInstanceState()`帮你保存当前Activity的状态、数据等，**直到再回到该Activity之前（**`**onResume()**`**之前），你执行Fragment事务，就会抛出该异常！**（一般是其他Activity的回调让当前页面执行事务的情况，会引发该问题）
+
+     2. 解决方案
+
+        ​	1、该事务使用commitAllowingStateLoss()方法提交，但是有**可能导致该次提交无效**！（在此次离开时恰巧Activity被强杀时）
+
+        ​	2、在重新回到该Activity的时候（onResumeFragments()或onPostResume()），再执行该事务，**配合数据保存，可以做到事务的完整性，不会丢失事务**。
+
+        ![img](https://ask.qcloudimg.com/http-save/yehe-2802329/v7cy855tna.jpeg?imageView2/2/w/1620)
+
+        **support-26.0.0开始，Fragment以及FragmentManager提供了isStateSaved()，可以判断宿主是否已经执行过onSaveInstanceState()，故上面的mIsSaved可以用isStateSaved()代替了。**
+
+  4. **Fragment重叠异常-----正确使用hide、show的姿势**
+
+  5. **Fragment嵌套的那些坑**
+
+  6. **未必靠谱的出栈方法remove()**
+
+  7. **多个Fragment同时出栈的深坑BUG**
+
+  8. **深坑 Fragment转场动画**
+
+     
+
+#### FragmentManager
+
+> 顾名思义，管理fragment的生命周期和显示隐藏
+
+- 背景
+
+  ​	Fragment的添加(add)、删除(remove)、隐藏(hide)、显示(show)，还有需要和Activity生命周期联动，还有回退栈，所以需要一个管理器来管理Fragment的操作
+
+- 使用
+
+  1. 通过getFragmentManager() | getSupportFragmentManager()获取
+
+  2. 创建事务(Transaction)
+
+     ``` java
+     Fragment newFragment = new ExampleFragment();
+     FragmentTransaction transaction = getFragmentManager().beginTransaction();
+     
+     // Replace whatever is in the fragment_container view with this fragment,
+     // and add the transaction to the back stack
+     transaction.replace(R.id.fragment_container, newFragment);
+     // 加入回退栈
+     transaction.addToBackStack(null);
+     
+     // Commit the transaction
+     transaction.commit();
+     ```
+
+  3. 提交
+
+     ​	调用commit()方法并不能立即执行transaction中包含的改变动作，commit()方法把transaction加入activity的UI线程队列中。但是，如果觉得有必要的话，可以调用executePendingTransactions()方法来立即执行commit()提供的transaction。（这样做通常是没有必要的，除非这个transaction被其他线程依赖。）
+
+     ​	注意：你只能在activity存储它的状态（当用户要离开activity时）之前调用commit()，如果在存储状态之后调用commit()，将会抛出一个异常。这是因为当activity再次被恢复时commit之后的状态将丢失。如果丢失也没关系，那么使用commitAllowingStateLoss()方法。
+
+- 原理
+
+  1. 回退栈的实现
+
+     `ArrayList<BackStackRecord> mBackStack` 
+
+  2. add、remove的实现
+
+  3. fragment生命周期的管理
+
+  
+
+#### FragmentTransaction
+
+> Fragment的事务，具体实现类是BackStackRecord
+>
+> 包含了add、remove、replace、hide、show、commit等方法
 
 
 
