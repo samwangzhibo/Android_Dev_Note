@@ -1550,6 +1550,10 @@ ViewRootImpl.performTraversal -> viewRootImpl.performDraw() -> viewRootImpl.draw
 
 ![image-20190418151939418](picture/image-20190418151939418.png)
 
+
+
+
+
 ### InputManagerService
 
 [十分钟了解Android触摸事件原理（InputManagerService）](https://juejin.im/post/5a291aca51882531926e9e3d)
@@ -1758,6 +1762,26 @@ animationView.loop(true);
 
 - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
 
+### Lru算法
+
+- 概念
+
+  least renctenly used，最久未使用，意思是最久未使用的可以移除
+
+- What?
+
+  ​	google提供的LruCache的机制是，当图片的大小大于预设的缓存池大小比如(8M)，就把最久没有使用的图片移除
+
+- 原理
+
+  ​	LinkedHashMap，内部除了本身List<K,V>存储数据之外，还有一个List<K,V>的双向链表，记录读取顺序，链表从前到后表示的是元素的访问顺序。
+
+  ​	比如我们读取了一个图片，先判断这个图片是否在链表中，如果在就把它从链表移除，再移到链表最前面，表示我们最近的访问的是它，然后会回调一个 `removeEldestEntry(K,V)` 的方法，这个方法会把链表最后的元素返回，也就是LinkedHashMap维护了LRU算法的访问顺序还抛出一个方法给我们重写。比如我们要实现这个8M的缓存池，可以在 `removeEldestEntry(K,V)` 中，判断如果当前图片总大小大于8M，就return true，也就是删除这个链表元素。
+
+  ​	这里提一下为啥是双向链表。1. 因为我们要删除最后一个节点，如果是单向链表的话，每次删除需要遍历到最后一个元素，如果是保留最后一个元素的指针的话，也没法知道他的头节点。2. 如果我们删除链表中的指定节点，如果是有pre、next节点会快点。
+
+  
+
 ## 9. 性能优化
 
 ### <a id="布局优化">布局优化</a>
@@ -1854,20 +1878,110 @@ SurfaceTexture
 
 
 
-### 5. RecyclerView
+### 5.  ListView
+
+- 为什么？
+
+  ​	系统需要一个列表控件
+
+- 是什么?
+
+  ​	一种展示列表的容器，采用的适配器模式的架构，使用者只需要关注每个Item的样式、布局、位置，Item的个数，提供缓存机制，可以随便的滑动和加载Item
+
+  ![img](https://img-blog.csdnimg.cn/20190215163702637.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+- 怎么实现的？
+
+  1. Adapter和观察者模式
+
+     > 为啥使用Adapter(不用关心数据是哪里来的)，notifydataSetChanged的观察者模式
+
+     ![img](https://img-blog.csdnimg.cn/20190220194219530.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+  2. ListView的RecycleBin与回收机制
+
+     > RecycleBin是用于ListView子元素的缓存。里面有一个View[] mActiviesViews和ArrayList<View>[] mScrapViews。
+     >
+     > mActiviesViews用于存放ListView在屏幕内的对象，mScrapViews用于存放ListView移出屏幕的对象。
+
+     ​	当我们向上滑动时，ListView的onTouchEvent中的move判断条件调用，判断元素0的getBottom()小于滑动距离，也就是元素0即将移出屏幕，这个时候ListView认为元素0没有用了，然后就把元素0放入RecycleBin的mScrapViews里面。然后判断元素6要进入屏幕，就从RecycleBin的mScrapViews的mScrapViews里面取出元素0刚刚的视图元素，作为元素6布局出来。
+
+     ![img](https://img-blog.csdnimg.cn/20190220235233401.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
+
+     3. 绘制过程
+
+        ​	ListView也是ViewGroup，所以它的流程也是measure、layout、draw。ViewGroup的measure里面其实就是调用子布局的mesure，没什么特殊的。draw的话，其实也是调用子布局的绘制方法。所以我们分析layout过程，layout过程分为2种情况。
+
+        1. 第一次layout。第一次layout，在RecycleBin获取不到mActiviesViews缓存，所以调用getView()直接朝adapter要View，要来了View后，然后逐个layout布局。
+
+        2. 第N次layout。在RecycleBin获取到mActiviesViews缓存，然后逐个layout布局
+
+     4. 惯性滑动的实现
+
+        OverScroller的`fling()`
+
+- ListView的优化
+
+  1. convertView的复用
+  2. ViewHolder，减少findViewById的时间，静态内部类(防止内部类持有外部类引用，内部类不释放的话外部类会内存泄漏)
+  3. 图片加载使用三级缓存(软引用(4.3之后已经无用，系统不再是内存不足的时候回收软引用)、 Lru缓存、本地缓存) 图片的错位问题，绑定url，对于imageview只设置其指定url下载下来的图片
+
+- 参考
+
+  [Android面试---ListView原理及fling分析](https://blog.csdn.net/wangzhibo666/article/details/87370137)
+
+### 6. RecyclerView
+
+- 背景
+
+  ListView不够定制化，默认是纵向排列的，ListView的ViewHolder需要自己实现
+
+- 方案
+
+  ​	提供RecyclerView组件，其中管理Item布局和手势响应的叫做**LayoutManager**， 自己已经带了ViewHolder的逻辑，中间的间隔修饰采用**ItemDecoration**组件处理。
 
 - 相对于ListView优点
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
   - 支持单个Item刷新
   - 默认封装ViewHolder操作
-- LayoutManager
-- ItemDecoration
+  
+- 优化
+
+  1. 减少View层级
+  2. 使用new View()创建视图代替xml，减少inflate时间，大概1/3时间
+  3. 
+
+- 参考
+
+  [RecyclerView问题汇总](https://juejin.im/post/5cce410551882541e40e471d)
+
+  
+
+  LayoutManager
+
+  >  负责摆放视图等相关操作
+
+  ItemDecoration
+
+  > 负责绘制Item附近的分割线
+
+  ItemAnimator 
+
+  > 为Item的一般操作添加动画效果，如，增删条目等
+
+   SnapHelper
+
+  > 在某些场景下，卡片列表滑动浏览[有的叫轮播图]，希望当滑动停止时可以将当前卡片停留在屏幕某个位置，比如停在左边，以吸引用户的焦点。那么可以使用RecyclerView + Snaphelper来实现
+
+
+
+
 
 [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
 
 
-### 6. View、Dialog、PopUpWindow、Fragment、Activity
+### 7. View、Dialog、PopUpWindow、Fragment、Activity
 
 #### Dialog还是PopUpWindow?
 
@@ -1945,6 +2059,10 @@ SurfaceTexture
 - 背景
 
   ​	Activity不够模块化，比如要登录页和注册页切换，Activity太重了。解决方案就是把功能性相关的代码写在一起，就是View和Model(视图的处理，拉取网络刷新View)，然后给他起一个名字，就叫Fragment，他是碎片，可以拼凑在一起给Activity用
+
+- what？
+
+  ![img](https://images2015.cnblogs.com/blog/462303/201510/462303-20151013221141007-1433074538.jpg)
 
 - 使用
 
@@ -2115,7 +2233,11 @@ SurfaceTexture
 
 
 
-## 11. 热修复与插件化
+## 11. 组件化、热修复与插件化
+
+### 组件化
+
+
 
 ### 热修复
 
@@ -2309,7 +2431,7 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 
 [抖音3年高手脑图详细](/脑图/抖音3年的脑图详细.png)
 
-
+ [技术博客笔记大汇总【15年10月到至今】](https://juejin.im/post/5cce410551882541e40e471d#heading-2)
 
 
 
