@@ -1562,9 +1562,75 @@ ViewRootImpl.performTraversal -> viewRootImpl.performDraw() -> viewRootImpl.draw
 
 ## 6. 滚动机制(Scroll、Fling)
 
+View#`scrollTo(int x, int y)`
 
+> x往左是正方向  y往上是正方向  和坐标系相反
 
+原理
 
+​	canvas画布的移动
+
+Scroller
+
+> 滚动的辅助类
+
+- 使用
+
+  见[类](https://github.com/samwangzhibo/LoveStudy/blob/master/app/src/main/java/com/example/wangzhibo/lovestudy/touchevent/DispatchLinearLayout.java)
+
+  ``` java
+  /**
+   * scroller的使用
+   *  1.重写{@link View#computeScroll()} 其中使用 {@link Scroller#computeScrollOffset()}判断是否结束滑动，调用ScrollTo(dx,dy)
+   *  2.startScroll 开始滑动 调用invalidate方法
+   *
+   *  scrollBy(0, 100)的原理
+   *  调用ScrollTo() 正数的话 视图往Y轴上移动  可以理解为当前窗口的移动 而不是背景的移动
+   *
+   * Created by samwangzhibo on 2019/1/25.
+   */
+  
+  public class DispatchLinearLayout extends LinearLayout {
+      private static final String TAG = "DispatchLinearLayout";
+      Scroller scroller;
+      public DispatchLinearLayout(Context context) {
+          this(context, null);
+      }
+  
+      public DispatchLinearLayout(Context context, AttributeSet attrs) {
+          super(context, attrs);
+          scroller = new Scroller(context);
+      }
+  
+      @Override
+      public void computeScroll() {
+        // 滑动没有结束 其实就是当前时间/总时间获取到当前的值
+         if (scroller.computeScrollOffset()){
+           // 手动调用scrollTo
+             scrollTo(scroller.getCurrX(), scroller.getCurrY());
+             postInvalidate();
+         }
+  
+      private void startScroll() {
+          scroller.startScroll(300, 300, -300, -300, 3000);
+          invalidate();
+      }
+  
+  }
+  ```
+
+- 原理
+
+  ​	调用`startScroll()` 然后开始刷新，会走View的`computeScroll()`，然后调用 `computeScrollOffset()`，根据当前的时间 / 总时间 获取到的时间百分比，计算出当前的scrollX、scrollY，然后调用 `scrollTo(x, y)` 实际的实现滚动，然后继续调用 invalidate() 重新走computeScroll()
+
+  ​	![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559817381535&di=06c9cb96908b2b467520c189751314aa&imgtype=jpg&src=http%3A%2F%2Fimg3.imgtn.bdimg.com%2Fit%2Fu%3D2508163058%2C1128226288%26fm%3D214%26gp%3D0.jpg)
+
+- 小结
+
+  1. scrollTo()、scrollBy()中的x,y是和屏幕坐标系的正方向相反，最终通过移动canvas实现
+  2. scroller是实现平滑滚动的封装类，提供了平滑计算的startScroll()，还有快抛的fling()方法(原理一样的，只是数学计算公式不一样，给人惯性的感觉)。
+
+  
 
 ## 7. 动画机制(Drawable Animation、View Animation、Property Animation)
 
@@ -1797,11 +1863,8 @@ animationView.loop(true);
 ### 启动优化
 
 1. 区分进程 
-
 2. 子线程异步初始化资源，服务按需加载、service初始化后延
-
 3. 线程控制，对于不重要的线程，降低优先级
-
 4. 资源读取：
    1. sharepreference 
       1. sharepreference commit是阻塞的api，会返回是否修改成功，如果不关注修改结果，用apply代替，apply是同步修改内存的值，singleThreadPool 异步修改到本地
@@ -1809,8 +1872,7 @@ animationView.loop(true);
    2. asset读取资源异步化
 5. 首屏优化(LayoutInflator)，预取下个页面的View
 6. 虚拟机优化
-
-
+7.  **IdleHandler** 闲时任务 [IdleHandler，页面启动优化神器](https://juejin.im/post/5bea9a57e51d4509192b3d96)
 
 ### 绘制优化
 
