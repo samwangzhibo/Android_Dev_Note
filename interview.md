@@ -173,13 +173,13 @@ void a();
 ​	根据内部类定义的位置，可以分为几类。
 
 -  **成员内部类**
-  能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
+  	能够访问外围类的所有变量和方法，包括私有变量，同时还能集成其他的类。外围类也能访问它的私有变量和方法。编译器会给他们生成access方法。而非静态内部类需要通过生成外部类来间接生成。
 -  **静态内部类**
-  能够访问外围类的静态变量和静态方法，包括私有属性的。静态内部类是指被声明为static的内部类，可不依赖外部类实例化；
+      能够访问外围类的静态变量和静态方法，包括私有属性的。静态内部类是指被声明为static的内部类，可不依赖外部类实例化；
 -  **局部内部类**
-   访问方法的变量需要使用 `final` 修饰，因为参数在方法调用完之后就出栈了，那么内部类就不能访问到这个变量了。用final申明变量，如果是基础类型，会直接变成值，如果是引用类型，会通过构造函数传进来。
+        访问方法的变量需要使用 `final` 修饰，因为参数在方法调用完之后就出栈了，那么内部类就不能访问到这个变量了。用final申明变量，如果是基础类型，会直接变成值，如果是引用类型，会通过构造函数传进来。
 -  **匿名内部类**
-  不能用权限修饰符修饰，局部内部类和匿名内部类都默认持有外部类的引用。一般android中，我们为了防止 `Activity` 内存泄露，都是把匿名内部类声明成静态内部类，然后传递Activity的 WeakReference。
+        不能用权限修饰符修饰，局部内部类和匿名内部类都默认持有外部类的引用。一般android中，我们为了防止 `Activity` 内存泄露，都是把匿名内部类声明成静态内部类，然后传递Activity的 WeakReference。
 
 [java提高篇(十)-----详解匿名内部类https://www.cnblogs.com/chenssy/p/3390871.html](https://www.cnblogs.com/chenssy/p/3390871.html)
 [java提高篇(八)----详解内部类](https://www.cnblogs.com/chenssy/p/3388487.html)
@@ -188,14 +188,14 @@ void a();
 ## <a id="final">3. final</a>
 - 修饰类 类不能被继承，比如String就是final类型的，内部是字符串的封装操作，系统不希望它被重写。
 - 修饰方法 方法不能被子类重写。
-  比如View的measure、layout、draw，因为它们内部有缓存逻辑，比如measure会通过计算父布局传过来的MeasureSpec和缓存的meaSpec做比较，然后来控制onMeasure的调用。这个会MeasureSpec是父布局通过父View的measureSpec和子View的LayoutParams 生成的measureSpec，最终传给子View的onMeasure方法。MeasureSpec是32位的整型。前2位是模式，后30位是size。模式分为 `Unspesfic`、`At_most`、`Exctly`，我们自定义View需要处理 `at_most` 模式，比如`TextView` 的 `at_most` 模式就是按照字体的大小和个数来计算出来的。
-  比如View的layout方法，主要也是做一些缓存的功能，会去看布局是否变化，如果变化了才去调用 `onLayout` 布局。其中的l、t、r、b参数，最开始是由 `ViewRootImpl` 的 `performLayout` 里面调用 `DecorView` 的 `layout` 方法，传递的参数是子布局在父布局里面的位置，这里是 `DecorView` 在 `PhoneWindow` 里面的位置。
-  比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
+       比如View的measure、layout、draw，因为它们内部有缓存逻辑，比如measure会通过计算父布局传过来的MeasureSpec和缓存的meaSpec做比较，然后来控制onMeasure的调用。这个会MeasureSpec是父布局通过父View的measureSpec和子View的LayoutParams 生成的measureSpec，最终传给子View的onMeasure方法。MeasureSpec是32位的整型。前2位是模式，后30位是size。模式分为 `Unspesfic`、`At_most`、`Exctly`，我们自定义View需要处理 `at_most` 模式，比如`TextView` 的 `at_most` 模式就是按照字体的大小和个数来计算出来的。
+        比如View的layout方法，主要也是做一些缓存的功能，会去看布局是否变化，如果变化了才去调用 `onLayout` 布局。其中的l、t、r、b参数，最开始是由 `ViewRootImpl` 的 `performLayout` 里面调用 `DecorView` 的 `layout` 方法，传递的参数是子布局在父布局里面的位置，这里是 `DecorView` 在 `PhoneWindow` 里面的位置。
+        比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
 - 修饰变量（说明final变量引用指向的对象地址不能变）
   - 成员变量 
-    只能被初始化一次。
+    	只能被初始化一次。
   - 局部变量
-    主要是局部内部类或者是匿名内部类使用，因为方法在调用完成之后会出栈，然后形参和局部变量就失效，因为变量需要给匿名内部类使用，所以声明成 `final` ，让它指向的地址不能变。如果 `final` 变量是基础类型，编译的时候就确定，直接替换成基础的确认的值，如果是引用，会把引用通过构造函数传进来。
+         主要是局部内部类或者是匿名内部类使用，因为方法在调用完成之后会出栈，然后形参和局部变量就失效，因为变量需要给匿名内部类使用，所以声明成 `final` ，让它指向的地址不能变。如果 `final` 变量是基础类型，编译的时候就确定，直接替换成基础的确认的值，如果是引用，会把引用通过构造函数传进来。
 ```java
 public Destionation destionation(final String str) {
         /**
@@ -1498,19 +1498,91 @@ ViewRootImpl.performTraversal -> ViewRootImpl.performLayout() -> DecorView(View)
 
 DecorView.onLayout()子类重写 -> FrameLayout.onLayout() -> getChildAt(i).layout() -> View.layout -> View.onLayout(在frameLayout中的left)
 
+#### 方法参数详解：
 
+**onLayout(isChanged, left, top, right, bottom)**
 
+1. isChanged：这次重新布局该View在父布局中的位置是否变化
+2. Left: 该View的左边距离父布局中左边的距离
+3. Top: 该View的顶部距离父布局顶部的距离
+4. Right: 该View的右边距离父布局的左侧距离
+5. Bottom:该View的底部距离父布局的距离
 
+![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559823633654&di=9ed02a4c9b20febdcead8eeffa4c95a5&imgtype=0&src=http%3A%2F%2Faliyunzixunbucket.oss-cn-beijing.aliyuncs.com%2Fjpg%2Fac7efbde7d7e008e53d58c92afddde59.jpg%3Fx-oss-process%3Dimage%2Fresize%2Cp_100%2Fauto-orient%2C1%2Fquality%2Cq_90%2Fformat%2Cjpg%2Fwatermark%2Cimage_eXVuY2VzaGk%3D%2Ct_100)
 
+**相关方法**
 
+getLeft()
+
+``` java
+    /**
+     * Left position of this view relative to its parent.
+     * view的左边相对于父布局左边的距离
+     * @return The left edge of this view, in pixels.
+     */
+    @ViewDebug.CapturedViewProperty
+    public final int getLeft() {
+        return mLeft;
+    }
+```
+
+getTop()
+
+``` java
+		/**
+     * Top position of this view relative to its parent.
+     * view顶部距离父布局顶部的距离
+     * @return The top of this view, in pixels.
+     */
+    @ViewDebug.CapturedViewProperty
+    public final int getTop() {
+        return mTop;
+    }
+```
+
+getRight()
+
+``` java
+    /**
+     * Right position of this view relative to its parent.
+     * view的右边距离父布局左边的距离
+     * @return The right edge of this view, in pixels.
+     */
+    @ViewDebug.CapturedViewProperty
+    public final int getRight() {
+        return mRight;
+    }
+```
+
+View的宽度 = getRight() - getLeft() 
+
+> 不是绝对的，如果View的宽度大于父布局宽度
+
+View的高度 = getBottom() - getTop()
+
+> 不是绝对的，如果View的高度大于父布局高度
 
 
 
 ### 绘制
 
+#### 执行流程:
+
 ViewRootImpl.performTraversal -> viewRootImpl.performDraw() -> viewRootImpl.draw() -> viewRootImpl.drawSoftWare() -> DecorView.draw(canvas来至surface.unlockCanvas(dirty)) -> View.draw() 
 
 -> View.drawBackground(canvas)  backgroundDrawable.draw(canvas)
+
+
+
+#### 绘制方法
+
+onDraw(Canvas canvas)
+
+> canvas是由surface
+
+比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
+
+
 
 
 
@@ -1550,9 +1622,30 @@ ViewRootImpl.performTraversal -> viewRootImpl.performDraw() -> viewRootImpl.draw
 
 ![image-20190418151939418](picture/image-20190418151939418.png)
 
+[Input系统—UI线程](http://gityuan.com/2016/12/24/input-ui/)
+
+[**十分钟了解Android触摸事件原理（InputManagerService）**](https://juejin.im/post/5a291aca51882531926e9e3d)
 
 
 
+Activity.makeVisible() -> WindowManagerImpl.addView() -> WindowManagerGlobal.addView()
+
+ViewRootImp#WindowInputEventRecevier ->  ViewRootImpl$ViewPostImeInputStage.dispatchTouchEvent -> DecorView.dispatchTouchEvent
+
+Activity.dispatchTouchEvent ->  PhoneWindow.superDispatch -> DecorView.superDispatchTouchEvent  -> FrameLayout -> ViewGroup
+
+
+
+-> dispatchTouchEvent(1.true，直接退出分发事件  2.false  自己不分发 把事件交给下个view或者父view  3.super 自己分发事件)
+
+-> onInterceptTouchEvent(1.true 拦截事件 之后就不再调用  2. false  不拦截 继续分发   3.super 调用父类拦截 比如recyclerView)
+
+-> onTouch先执行 返回true 就不执行onTouchEvent onTouchEvent(1.false 不消耗   2.true 消耗掉  不继续下发  3.super调用父类的)
+
+- 1.action_cancle 被父view拦截时或者手势操作被打断 比如弹框 一般当做action_up处理
+- 2.action_down时候onTouchEvent或者onTouch返回true 才能继续下发事件
+- 3.子布局被拦截之后，可以通过getParent.requestDisallowIntercept设置 disallowIntercept FLAG，递归过程一直向上设置FLAG标志
+- 4.同一级的View  后面写的位于前面的上面一层，FrameLayout倒序遍历的，在事件分发时候，先分发给上面一层，上面一层如果dispatchTouchEvent返回true的话，就不分发给下面一层了
 
 ### InputManagerService
 
