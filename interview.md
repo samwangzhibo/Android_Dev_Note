@@ -1908,17 +1908,17 @@ SurfaceTexture
 
      ![img](https://img-blog.csdnimg.cn/20190220235233401.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmd6aGlibzY2Ng==,size_16,color_FFFFFF,t_70)
 
-     3. 绘制过程
+  3. 绘制过程
 
-        ​	ListView也是ViewGroup，所以它的流程也是measure、layout、draw。ViewGroup的measure里面其实就是调用子布局的mesure，没什么特殊的。draw的话，其实也是调用子布局的绘制方法。所以我们分析layout过程，layout过程分为2种情况。
+     ​	ListView也是ViewGroup，所以它的流程也是measure、layout、draw。ViewGroup的measure里面其实就是调用子布局的mesure，没什么特殊的。draw的话，其实也是调用子布局的绘制方法。所以我们分析layout过程，layout过程分为2种情况。
 
-        1. 第一次layout。第一次layout，在RecycleBin获取不到mActiviesViews缓存，所以调用getView()直接朝adapter要View，要来了View后，然后逐个layout布局。
+     1. 第一次layout。第一次layout，在RecycleBin获取不到mActiviesViews缓存，所以调用getView()直接朝adapter要View，要来了View后，然后逐个layout布局。
 
-        2. 第N次layout。在RecycleBin获取到mActiviesViews缓存，然后逐个layout布局
+     2. 第N次layout。在RecycleBin获取到mActiviesViews缓存，然后逐个layout布局
 
-     4. 惯性滑动的实现
+  4. 惯性滑动的实现
 
-        OverScroller的`fling()`
+     OverScroller的`fling()`
 
 - ListView的优化
 
@@ -1945,11 +1945,41 @@ SurfaceTexture
   - 支持单个Item刷新
   - 默认封装ViewHolder操作
   
+- 怎么实现的？
+
+  ​	测量就是调用RecyclerView的`onMeasure()`方法，最后使用LayoutManager的 `fill()`方法，RecyclerView的布局，
+
 - 优化
 
   1. 减少View层级
+
   2. 使用new View()创建视图代替xml，减少inflate时间，大概1/3时间
-  3. 
+
+  3. RecyclerView的高度不会因为Item改变时，使用`setHasFixedSize(true)`，避免 `requestLayout()` 操作
+
+  4. 通过DiffUtils工具，使用Adapter的增删改查方法去刷新RecyclerView
+
+     ``` java
+     onItemRangeChanged()
+     
+     onItemRangeInserted()
+     
+     onItemRangeRemoved()
+     
+     onItemRangeMoved()
+     ```
+
+  5. `setHasStableIds(true)`，可以避免调用 `notifyDataSetChanged()` 全部闪屏 
+
+     [RecyclerView notifyDataSetChanged 导致图片闪烁的真凶](https://www.jianshu.com/p/29352def27e6)
+
+  6. `setViewCacheSize(int viewCount)` 设置缓存数量，mCacheViews保存了ViewHolder的数据
+
+  7. `setRecycledViewPool()` 设置公共缓存池数量，mRecyclerPool保存了ViewHolder没有数据的Item
+
+- 常见面试题
+
+  1. 
 
 - 参考
 
