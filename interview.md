@@ -1338,12 +1338,12 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 - 主流程
   1. **Pause上一个Activity**，比如Launcher
-  2. AMS**开启一个进程**(`Process.start()`)，`Looper.loop()`，`ActivityThread.attach(new applicationThread())`
+  2. AMS**开启一个进程**(`Process.start()`)，`Looper.loop()`，`ActivityThread.attach(new applicationThread())`，并且启动ActivityThread(只是一个类，不是线程)中的主线程
   3. ActivityThread和**AMS连接**，传入`applicationThread` 的匿名binder
   4. **创建Application**，`AMS#attachApplication()`, 新建`Application`， 新建 application级别的context( `ContextImpl#createAppContext()`)，回调 `onCreate()`
   5. **启动Activity**，`applicationThread#scheduleLaunchActivity()`，`H` Handler 转发，主线程`performLaunchActivity()`,  新建`Activity`，并且 attach activity级别的Context(`ContextImpl#createActivityContext()`)，生成Window(`new PhoneWindow()`)，然后回调 `onCreate()`，生成 DecorView(`installDecor()`)，`setContextView(R.layout.xml)`(通过 LayoutInflator 解析xml至视图树到DecorView)
   6. **执行绘制**，`handleResumeActivity()`，先执行 `onStart`， 然后执行 `onResume`，之后获取`windowManager` 并执行 `windowManager#addView()`，最后调用`WindowGlobabl#addView()`，创建ViewRootImpl，调用 `requestLayout()` 方法，`performTraversal()`， 调用 `performMeasure()`、 `performLayout()`、`performDraw()`
-  7. **建立事件通道**，创建 `WindowInputEventReceiver`，使用`pair` 创建2个`channel`，事件的服务是InputManagerService，进程是SystemServer，线程是`InputReader`和`InputDispatcher`，事件处理模块EventHub  ![image-20190418112523977](https://ws3.sinaimg.cn/large/006tNc79ly1g26t5dmcfjj31m70u0gzh.jpg)
+  7. **建立事件通道**，创建 `WindowInputEventReceiver`，使用`pair` 创建2个`channel`，事件的服务是InputManagerService，进程是SystemServer，线程是`InputReader`和`InputDispatcher`，事件处理模块EventHub。这里为啥是socket，一个binder通信有大小限制，而且调用的时候是阻塞的. ![image-20190418112523977](https://ws3.sinaimg.cn/large/006tNc79ly1g26t5dmcfjj31m70u0gzh.jpg)
   8. 通知上个Activity **onStop**
 
 
@@ -1439,6 +1439,8 @@ ViewRootImpl.performTraversal -> performMeasure(根measureSpec，由window的大
 
 FrameLayout.onMeasure  ->   ViewGroup.measurechild(父布局的measpec和子布局的layoutparams计算出来的measureSpec) -> View.measure  -> View.onMeasure()
 
+​	View测量的最开始是由ViewRootImpl的performTraversal开始的，然后执行performMeasure()，调用DecorView的measure方法，DecorView是FrameLayout的子类，之后调用FrameLayout的onMeasure方法，onMeasure由会去找其childView，挨个执行measure()和onMeasure()
+
 #### 参数解释
 
 `onMeasure(widthMeasureSpec, heightMeasureSpec)`
@@ -1484,8 +1486,6 @@ mode解释
        }
    ```
 
-
-
 #### 调试技巧
 
 ​	打日志的话，直接去measureSpec调用`getSize()` 和 `getMode()` 看宽高是否有问题
@@ -1497,6 +1497,10 @@ mode解释
 ViewRootImpl.performTraversal -> ViewRootImpl.performLayout() -> DecorView(View).layout(父布局中的left,top,right,bottom) -> 
 
 DecorView.onLayout()子类重写 -> FrameLayout.onLayout() -> getChildAt(i).layout() -> View.layout -> View.onLayout(在frameLayout中的left)
+
+
+
+​	View的layout方法，主要也是做一些缓存的功能，会去看布局是否变化，如果变化了才去调用 `onLayout` 布局。其中的l、t、r、b参数，最开始是由 `ViewRootImpl` 的 `performLayout` 里面调用 `DecorView` 的 `layout` 方法，传递的参数是子布局在父布局里面的位置，这里是 `DecorView` 在 `PhoneWindow` 里面的位置
 
 #### 方法参数详解：
 
@@ -1580,7 +1584,7 @@ onDraw(Canvas canvas)
 
 > canvas是由surface
 
-比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
+​	比如View的 `draw` 方法，实际上了系统固定的绘制流程，比如先绘制background，实际是调用`backgroundDrawable` 的 `draw()` 方法，比如说颜色，ColorDrawable。然后调用 `onDraw()` 在绘制内容区域，然后调用 `dispatchDraw` 去绘制子布局，这个方法是 `ViewGroup` 实现的。之后画滚动条啥的。这里说一下，这个canvas 其实是 `Surface` 对象 lockCanvas 得来的，绘制完成后，封装成 `FrameBuffer` 然后发送给 `SurfaceFlinger` 进程绘制。
 
 
 
@@ -1608,11 +1612,37 @@ onDraw(Canvas canvas)
 
 > 这章主要是讲解framework层面，为啥canvas draw()了之后，就能显示到屏幕上了，包括60s渲染一次是谁控制的，OpenGl是怎么调用的，扩展讲一下CPU GPU双缓冲机制，这一块和SurfaceView和紧耦合
 
+SurfaceFlinger FrameBuffer Surface  
+
+framework层 EventThread(接收VSync事件通知)  HWComposer(处理部分SurfaceFlinger委托过来的合成工作) EGL(OpenGL是一个操作GPU的API CPU到GPU)  display
 
 
 
+#### GPU和CPU的执行流程
+
+CPU: measure -> layout -> draw -> skin -> Resterization
+
+GPU: measure -> layout -> draw(之前都是在CPU中) -> GPU(OpenGL ES) -> Resterization
 
 
+
+#### Android中的16ms
+
+> 系统每隔16ms就绘制一帧，这次的时候就缓冲下次的帧
+
+**GPU CPU Display双缓冲技术** VSYNC**信号**
+
+![image-20190607003211521](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190607003211521.png)
+
+![image-20190607003222554](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190607003222554.png)
+
+参考
+
+[**关于Android中16ms的问题**](https://www.jianshu.com/p/02800806356c)
+
+[Android丢帧分析与优化](https://www.jianshu.com/p/989ce9eb7af8)
+
+[深入Android渲染机制](http://www.cnblogs.com/ldq2016/p/6668148.html)
 
 
 
@@ -1876,44 +1906,43 @@ Scroller
   
   
   扩展
+  
+  
 
 ### Airbnb 动画库Lottie
 
-是什么？
+- 是什么？
 
-​	把AE导成Android、iOS原生动画
+  ​	把AE导成Android、iOS原生动画
 
-怎么用？
+- 怎么用？
 
-```java
-LottieAnimationView animationView = (LottieAnimationView) findViewById(R.id.animation_view);
-animationView.setAnimation("hello-world.json");
-animationView.loop(true);
-```
+  ``` java
+  LottieAnimationView animationView = (LottieAnimationView) findViewById(R.id.animation_view);
+  animationView.setAnimation("hello-world.json");
+  animationView.loop(true);
+  ```
 
-优缺点
+- 适用场景
 
-​	只是播放动画，如果需要根据百分比展示，需要调研下
+  ​	只是播放动画，如果需要根据百分比展示，需要调研下
 
-关键模块与类
+- 关键模块与类
 
 ​	
 
-原理
+- 原理
+  1. 适配原理
+  2. 绘制原理
+  3. 动画原理
 
-1. 适配原理
+- 参考
 
-2. 绘制原理
+  ​	[Airbnb 动画库Lottie](https://www.jianshu.com/p/19106e3d07b2)
 
-3. 动画原理
+  ​	[Android 之 Lottie 实现炫酷动画背后的原理](https://mp.weixin.qq.com/s/i_8wnO45dzZ_DtkBLabYuA)
 
-   
 
-参考
-
-[Airbnb 动画库Lottie](https://www.jianshu.com/p/19106e3d07b2)
-
-[Android 之 Lottie 实现炫酷动画背后的原理](https://mp.weixin.qq.com/s/i_8wnO45dzZ_DtkBLabYuA)
 
 ## 8. 图片相关
 
@@ -1947,7 +1976,7 @@ animationView.loop(true);
 
 > - 技术点：布局优化
 > - 参考回答：布局优化的核心就是尽量减少布局文件的层级，常见的方式有：
->   - 多嵌套情况下可使用RelativeLayout减少嵌套。
+>   - 多嵌套情况下可使用ConstraintLayout、RelativeLayout减少嵌套。
 >   - 布局层级相同的情况下使用LinearLayout，它比RelativeLayout更高效。
 >   - 使用 `<include>` 标签重用布局、`<merge>` 标签减少层级、`<ViewStub>` 标签懒加载。
 
@@ -1967,11 +1996,67 @@ animationView.loop(true);
 6. 虚拟机优化
 7.  **IdleHandler** 闲时任务 [IdleHandler，页面启动优化神器](https://juejin.im/post/5bea9a57e51d4509192b3d96)
 
+
+
 ### 绘制优化
 
+1. 在开发模式中开启GPU过渡绘制，对过渡绘制的区域进行优化，canvas.clipRect函数和多余背景设置 [android绘图canvas.clipRect()方法的作用](https://blog.csdn.net/lovexieyuan520/article/details/50698320)
+
+2. 检查ui线程是否做了耗时操作，开启StrictMode模式
+
+   如果主线程有网络或者IO操作，logcat中会有tag为"d/strictmode"的日志输出
 
 
 
+### 耗电量优化
+
+- 定位优化 
+
+  ​	精确度不高的时候使用wifi和基站定位，精确度高时使用Gps定位
+
+- 动画优化
+
+  ​	正确使用硬件加速，对于一些不支持硬件加速的函数，使用setLayerType() [Android应用性能优化实践](https://www.csdn.net/article/2015-11-05/2826130-speed-up-your-app/3)
+
+- 在不可见的时候，需要停止动画、操作
+
+
+
+### 其他优化
+
+- 内存泄漏
+
+  1. 定义
+
+     有些对象不收我们管理，垃圾回收器也不能回收了，最后太多了造成内存溢出(oom)
+
+  2. 原因
+
+     长周期对象持有短周期对象的引用，导致短周期对象无法释放
+
+  3. 监控手段
+
+     LeakCanary
+
+  4. 解决方案
+
+     handler的任务在activity等退出的时候移除，注意静态变量(长周期，无法回收)、单例、非静态内部类、Handler
+
+- 序列化优化
+
+  1. 对象序列化
+
+     | 名词 | Serializable                                                 | Parcalable         | Twitter  Serial |
+     | ---- | ------------------------------------------------------------ | ------------------ | --------------- |
+     | 特点 | 通过ObjectInputStream和ObjectOutputStream来实现的，在序列化中大量用到了反射和临时变量，并且还需要递归序列化用到了对象引用的其他对象 | 在内存中进行，高效 |                 |
+
+  2. 数据序列化
+
+     | 名词 | Json         | Protocol Buffers     |
+     | ---- | ------------ | -------------------- |
+     | 特点 | 易于排查问题 | 二进制，编码速度更快 |
+
+     
 
 ## 10. 视图
 
@@ -2392,12 +2477,6 @@ SurfaceTexture
 
 
 
-### ContentProvider
-
-生命周期 
-
-启动过程
-
 
 
 ### Broadcast 
@@ -2406,11 +2485,28 @@ SurfaceTexture
 
 
 
-### **SharePrefenrence **
+### 存储
+
+#### **SharePrefenrence **
 
 - **背景：**比contentProvider轻量级
 
+- **原理**
+
+  xml形式保存文件
+
 - **特点：**线程安全、进程不安全
+
+- 缺点
+
+  1. 跨进程不安全，没有跨进程的锁，就算使用MODE_MULTI_PROCESS，也不能保证进程安全。跨进程频繁读写，可能造成文件全部丢失。
+  2. 加载缓慢，由于加载使用了异步线程读取文件，100kb的文件大概读写需要50-100ms
+  3. 全量写入，不管是commit还是apply，一经调用，就是全量写入.
+
+- 优化
+
+  1. 复写Application中的getSharedPreferences()，可以解决跨进程不安全，全量写入的问题
+  2. 使用微信开源的MMKV代替SharedPrefenreces，MMKV使用mmap，读取更快，使用文件锁，保证了进程安全，使用protocol buffer来存储内容，体积更小，支持增量添加，不用每次全量写入。
 
 - 为什么进程不安全？如何保证进程安全？
 
@@ -2418,9 +2514,118 @@ SurfaceTexture
 
 
 
+#### 数据库 sqlite
+
+- 特点
+
+  ​	多进程安全、多线程安全
+
+- 优化
+
+  添加索引，增加查找速度
+
+  增加page的size，4096
+
+
+
+
+
+#### ContentProvider
+
+- 生命周期 
+
+- 启动过程
+
+
+
 ## 11. 组件化、热修复与插件化
 
 ### 组件化
+
+- 背景
+
+  随着工程的变大，代码分层是很有必要的，模块化的思想可以提高复用性
+
+- 什么是组件化？
+
+  我们把功能单一、可隔离的模块叫组件。他有下面特点
+
+  1. 代码和资源完全隔离
+  2. 组件之间单独存在
+  3. 组件之间可以互相通信
+  4. 组件可以动态集成
+
+- Why?
+
+  1. 减少耦合
+  2. 以aar提供，不需要再编译
+  3. 提高复用性
+  4. 为插件化做准备
+
+- 实现方案
+
+  1. SPI(Service Provider Interface)
+
+     - ServiceLoader实现。
+     - 缺点：使用反射和IO读取文件，造成初始化慢，初始化400个接口大概需要500ms-1000ms
+
+  2. 代码注入
+
+     在编译过程那种的Transform阶段，进行代码注入，对运行时没有性能影响，会增加编译时长
+
+
+
+### 插件化
+
+- 背景
+
+  应用体积越来越大，需要进行模块拆分与热部署
+
+- what?
+
+  把apk加载到内存运行
+
+- why?
+
+  减少包体积、不需要发版
+
+- how？
+
+  主要面临的问题：资源文件的加载、加载类文件和四大组件
+
+  用到的技术：ClassLoader类加载器、Java反射、插件资源访问、代理模式
+
+- 实现方案
+
+  1. VirtualApk:
+     1. 熟悉Activity启动流程，寻找合适的hook点，Android 9.0和之前版本差异
+     2. 熟悉类加载机制，能够从网络下载apk加载到内存
+
+  2. DroidPlugin
+
+     
+
+
+
+参考：
+
+https://www.infoq.cn/article/android-plug-ins-from-entry-to-give-up
+
+https://zhuanlan.zhihu.com/p/27080871
+
+[Android插件化介绍 gitbook](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/plugin.html)
+
+
+
+资源加载(构建Resource, 获取R文件中资源的Id, 通过id获取资源)
+
+参考：
+
+https://www.jianshu.com/p/c228fbd2bd85
+
+https://www.jianshu.com/p/913330114752
+
+https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
@@ -2428,9 +2633,9 @@ SurfaceTexture
 
 what?
 
-​	因为安卓的发版是
+​	不需要发版的修复线上出现的问题
 
-原理
+实现方案
 
 ​	把补丁的代码插入到**dexElements前面**
 
@@ -2446,25 +2651,7 @@ what?
 
 [gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
 
-### 插件化
 
-参考：
-
-https://www.infoq.cn/article/android-plug-ins-from-entry-to-give-up
-
-https://zhuanlan.zhihu.com/p/27080871
-
-
-
-资源加载(构建Resource, 获取R文件中资源的Id, 通过id获取资源)
-
-参考：
-
-https://www.jianshu.com/p/c228fbd2bd85
-
-https://www.jianshu.com/p/913330114752
-
-https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
@@ -2548,6 +2735,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # 设计模式
 
+6大原则
+
 
 
 # **计算机网络**
@@ -2564,7 +2753,11 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 [COW奶牛！Copy On Write机制了解一下](https://juejin.im/post/5bd96bcaf265da396b72f855)
 
+内存管理
+
 ### 虚拟内存的三级页表机制、缺页机制
+
+
 
 ### epoll pipe
 
