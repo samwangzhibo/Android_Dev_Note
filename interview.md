@@ -1028,7 +1028,7 @@ ThreadLocal类
 
 (原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，`lock` 之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
-![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1554958780132&di=882d13580a89f9e483259ba19d8674a1&imgtype=0&src=http%3A%2F%2Fwx2.sinaimg.cn%2Fmw690%2F006Xp67Kly1fq13iwg31vj30mp09jtbz.jpg)
+![image-20190612162615576](assets/image-20190612162615576.png)
 
 ## <a id="cas">9. CAS (compare and swap)</a>
 
@@ -1687,9 +1687,9 @@ GPU: measure -> layout -> draw(之前都是在CPU中) -> GPU(OpenGL ES) -> Reste
 
 **GPU CPU Display双缓冲技术** VSYNC**信号**
 
-![image-20190607003211521](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190607003211521.png)
+![image-20190607003211521](assets/image-20190607003211521.png)
 
-![image-20190607003222554](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190607003222554.png)
+![image-20190607003222554](assets/image-20190607003222554.png)
 
 参考
 
@@ -2100,6 +2100,12 @@ Scroller
   4. 解决方案
 
      handler的任务在activity等退出的时候移除，注意静态变量(长周期，无法回收)、单例、非静态内部类、Handler
+
+- 容器优化
+
+  SparseArray优化
+
+  
 
 - 序列化优化
 
@@ -2917,6 +2923,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ## 熟悉六大 OOD 设计原则
 
+
+
 ## 熟悉常见的设计模式，可以熟练的运用在项目中
 
 ## 理解 MVC、MVP、MVVM 的思想以及区别
@@ -2935,13 +2943,13 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # **操作系统**
 
-![img](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
 [操作系统面试重难点总结](https://juejin.im/entry/592257b62f301e006b183b95)
 
-
-
 ## CPU 调度
+
+
 
 ## 进程管理
 
@@ -2998,6 +3006,8 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 [刁钻题加证明](https://github.com/helen-x/AndroidInterview)
 
 [拆的比较细 适合简单过一下](https://github.com/CyC2018/CS-Notes)
+
+[Android开发工程师面试指南](https://github.com/sucese/android-interview-guide)
 
 
 
