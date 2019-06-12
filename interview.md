@@ -1,4 +1,4 @@
-# 目录
+目录
 
 ---
 
@@ -828,11 +828,11 @@ ThreadLocal类
 
   优化在锁竞争很激烈的情况反而降低了效率，可以通过 `-XX:-UseBiasedLocking` 来禁用偏向锁 
 
-- 参考 [Java并发编程：Synchronized底层优化（偏向锁、轻量级锁）](https://www.cnblogs.com/paddix/p/5405678.html) [**死磕 Java 并发 - 深入分析 synchronized 的实现原理**](https://juejin.im/entry/589981fc1b69e60059a2156a)
+- 参考 [Java并发编程：Synchronized底层优化（偏向锁、轻量级锁）](https://www.cnblogs.com/paddix/p/5405678.html) [**死磕 Java 并发 - 深入分析 synchronized 的实现原理**](https://juejin.im/entry/589981fc1b69e60059a2156a) [java锁偏向锁](<https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/>)  [Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
 
 ![img](https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/consulusion.jpg)
 
-[java锁偏向锁](<https://ccqy66.github.io/2018/03/07/java%E9%94%81%E5%81%8F%E5%90%91%E9%94%81/>)
+
 
 ## 6. JIT(HotSpot 虚拟机)
 
@@ -1191,6 +1191,45 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 # Android
 
+## 0. Android概论
+
+![img](https://github.com/BeesAndroid/BeesAndroid/raw/master/art/android_system_structure.png)
+
+[Android开发工程师面试指南](https://github.com/sucese/android-interview-guide)
+
+## 0.1 系统启动过程
+
+### init 进程
+
+>  了解 init 进程创建与启动的流程。
+
+- 简介
+- 创建和启动过程
+
+### Zygote 进程
+
+> 了解 Zygote 进程创建的流程，以及 fork 的过程。
+
+### system_server 进程
+
+>  了解 system_server 进程启动流程，工作流程。
+
+### ServiceManager
+
+> 了解 ServiceManager 的启动流程，以及 ServiceManager 在系统中的作用。
+
+- 简介
+
+  管理ams、pms、wms等binder
+
+- 作用
+
+  其他进程要和系统的服务通信，从它这里获取服务和binder的映射关系
+
+- 启动流程
+
+
+
 ## 1. Handler
 
 1. Handler通过 `sendMessage()` 发送Message到MessageQueue队列；
@@ -1331,6 +1370,22 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
   ![image-20190418112932108](https://ws4.sinaimg.cn/large/006tNc79ly1g26t5bxd2rj314o0fyq4m.jpg)
 
 - **缺点** 因为映射的物理页大小设置问题，通常是1Mb限制
+
+
+
+## 2.1 其他IPC
+
+### Socket
+
+​	Socket 是系统中常见的一种 IPC 通信方式，Socket 的应用范围很广，在进程间通信、网络通信都会用到，建议深入了解下。
+
+### Pipe
+
+​	Pipe（管道）是 Linux 系统中常见的一种 IPC 通信方式，建议深入了解下工作原理。
+
+### signal
+
+​	signal（信号量）是系统中常见的一种 IPC 通信方式，建议深入了解下工作原理。
 
 
 
@@ -1905,7 +1960,11 @@ Scroller
   
   
   
-  扩展
+  |      | 补间动画                             | 属性动画               |
+  | ---- | ------------------------------------ | ---------------------- |
+  | 性能 | 只是画布的变化，性能好               | 需要反射，需要整体刷新 |
+  | 位置 | 只改变画布，不改变属性，点击位置不变 | 改变属性，点击位置改变 |
+  |      |                                      |                        |
   
   
 
@@ -2108,15 +2167,70 @@ SurfaceTexture
 
 ### 2. NestedParent和 NestedChild
 
+- 背景
+
+  ​	在传统的事件分发机制 中，一旦某个 View 或者 ViewGroup 消费了事件，就很难将事件交给父 View 进行共同处理。
+
+- what?
+
+  ​	NestedScrolling 机制很好地帮助我们解决了这一问题。我们只需要按照规范实现相应的接口即可，子 View 实现 NestedScrollingChild，父 View  实现 NestedScrollingParent ，通过 NestedScrollingChildHelper 或者 NestedScrollingParentHelper 完成交互。
+
+  ​	要求子View在准备滑动之前将滑动的细节信息传递给父View，父View可以决定是否部分或者全部消耗掉这次滑动，并使用消耗掉的值在子View滑动之前做自己想做的事情，子View会在父View处理完后收到剩余的没有被父View消耗掉的值，然后再根据这个值进行滑动。滑动完成之后如果子View没有完全消耗掉这个剩余的值就再告知一下父View，我滑完了，但是还有剩余的值你还要不要？
+
+- 使用
+
+  - NestedScrollingParent
+  - NestedScrollingParentHelper
+  - NestedScrollingChild
+  - NestedScrollingChildHelper
+
+  
+
+- 原理
+
+  ​	
+
+- 参考
+
+  [NestedScrolling 机制深入解析](https://www.jianshu.com/p/eb9d3f212986) [Android NestedScrolling全面解析 - 带你实现一个支持嵌套滑动的下拉刷新（上篇）](https://www.jianshu.com/p/f09762df81a5)
+
+
+
 
 
 ### 3. CoordinatorLayout和Behivor(协同布局)
 
+- 背景
 
+  ​	NestedParent、NestedChild解决了嵌套事件传递的问题，但是如果我们每次都是通过自定义NestedChild、NestedParent还是比较麻烦的，CoordinatorLayout布局的话，引入了Behivor和Anchor锚点的概念，一个布局可以指定其相对于其他Anchor的Behivor，这样就不用去处理2个视图之间的关系了。
+
+- 是什么?
+
+  ​	协同布局，意思是协同子视图之间的关系，高配版的FrameLayout。
+
+- 使用
+
+- 原理
+
+- 参考
+
+  [coordinatorLayout使用总结篇，看完这篇完全可以开发5.0的高级特效了]([http://www.jcodecraeer.com/plus/view.php?aid=10428](http://www.jcodecraeer.com/plus/view.php?aid=10428)) [自定义 Behavior，实现嵌套滑动、平滑切换周月视图的日历](https://www.jianshu.com/p/bb5e2c1bda18)
+  
+  
 
 ### 4. ConstaintLayout(约束布局)
 
+- 背景
 
+- 是什么？
+
+- 怎么用？
+
+- 原理
+
+- 参考
+
+  
 
 ### 5.  ListView
 
@@ -2223,7 +2337,7 @@ SurfaceTexture
 
 - 参考
 
-  [RecyclerView问题汇总](https://juejin.im/post/5cce410551882541e40e471d)
+  [RecyclerView问题汇总](https://juejin.im/post/5cce410551882541e40e471d) [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
   
 
@@ -2242,12 +2356,6 @@ SurfaceTexture
    SnapHelper
 
   > 在某些场景下，卡片列表滑动浏览[有的叫轮播图]，希望当滑动停止时可以将当前卡片停留在屏幕某个位置，比如停在左边，以吸引用户的焦点。那么可以使用RecyclerView + Snaphelper来实现
-
-
-
-
-
-[RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
 
 
@@ -2306,6 +2414,14 @@ SurfaceTexture
   ​	[Dialog和PopUpWindow的抉择](https://www.jianshu.com/p/e588d74b5c9f)
 
 
+
+### 8.snakeBar和Toast
+
+|            | snakeBar                              | Toast                                                        |
+| ---------- | ------------------------------------- | ------------------------------------------------------------ |
+| 响应交互   | 响应                                  | 不响应                                                       |
+| 响应返回键 |                                       | 系统window                                                   |
+| 实现原理   | windowmanagerService添加View flag不同 | 1.通过notifycationmanagerservice获取token 2.根据token给 windowmanagerService添加View [Toast的View界面是如何绘制出来的--Toast的Window（view）创建过程](https://blog.csdn.net/qq475703980/article/details/79903963) |
 
 
 
@@ -2532,13 +2648,55 @@ SurfaceTexture
 
 #### ContentProvider
 
-- 生命周期 
+- 生命周期
+
+  
 
 - 启动过程
 
 
 
-## 11. 组件化、热修复与插件化
+## 12. 核心服务
+
+### ActivityManagerService（AMS）
+
+理解 ActivityManagerService 工作流程，以及与 Activity 工作的流程。
+
+### WindowManagerService（WMS）
+
+理解 WindowManagerService 工作流程，以及与 ActivityManagerService 和 Activity 工作的过程。
+
+### View、Window、Surface
+
+理解 Activity、Window、View 之间的关系，了解 View 渲染机制。
+
+### Surface、SurfaceFlinger
+
+理解 View 与 Surface 之间的关系，了解 SurfaceFlinger 工作流程，理解 View 渲染的过程。
+
+### PackageManagerService（PKMS）
+
+理解 PackageManagerService 工作流程，了解 Apk 安装与卸载过程。
+
+### PowerManagerService（PMS）
+
+理解 PackageManagerService 工作流程，了解屏幕唤醒、灭屏的过程，并理解 WeakLock 机制。
+
+### InputManagerService（IMS）
+
+理解 InputManagerService 工作流程，理解事件的创建流程、事件分发机制，ANR 触发原理。
+
+### AudioFlinger
+
+理解 AudioFlinger 工作流程。
+
+### AssertManager
+
+理解 Apk 安装包中资源管理的过程。
+
+
+
+## 13. 组件化、热修复与插件化
 
 ### 组件化
 
@@ -2607,7 +2765,7 @@ SurfaceTexture
 
 
 
-参考：
+- 参考：
 
 https://www.infoq.cn/article/android-plug-ins-from-entry-to-give-up
 
@@ -2631,25 +2789,21 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ### 热修复
 
-what?
+- what?
 
 ​	不需要发版的修复线上出现的问题
 
-实现方案
+- 实现方案
 
 ​	把补丁的代码插入到**dexElements前面**
 
-问题
+- 问题
 
-**is_preverify 预验证 给每个class添加一个对其他dex的class的引用**
+  **is_preverify 预验证 给每个class添加一个对其他dex的class的引用**
 
+- 参考：
 
-
- 参考：
-
-[Android 热修复原理篇及几大方案比较 - CSDN博客](https://juejin.im/entry/5b7bdd35e51d4538807130e4)
-
-[gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
+  [Android 热修复原理篇及几大方案比较 - CSDN博客](https://juejin.im/entry/5b7bdd35e51d4538807130e4) [gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
 
 
 
@@ -2660,6 +2814,12 @@ what?
 ## <a id="kotlin">kotlin</a>
 
 [用Kotlin去提高生产力:汇总Kotlin相对于Java的优势 kotlin_tips](https://juejin.im/post/5abe031af265da238059c18c#heading-0)
+
+
+
+## Android Gradle Plugin
+
+通过阅读 Android Gradle Plugin 源码，理解 Gradle 构建项目的过程，了解插件开发过程。
 
 
 
@@ -2699,6 +2859,8 @@ what?
 
 
 
+
+
 ## 上传库到Maven
 
 > 参考 [android上传库到maven中央](https://blog.csdn.net/fwt336/article/details/76078691)
@@ -2717,15 +2879,33 @@ what?
 
 ## 1. Retrofit
 
-[Java面试必问-死锁终极篇](<https://juejin.im/post/5aaf6ee76fb9a028d3753534>)
+
+
+
 
 ## 2. Rxjava
 
+
+
+
+
 ## 3. Glide
+
+
+
+
 
 ## 4. OKHttp
 
+
+
+
+
 ## 5. leacany
+
+
+
+
 
 # 泛前端
 
@@ -2735,7 +2915,15 @@ what?
 
 # 设计模式
 
-6大原则
+## 熟悉六大 OOD 设计原则
+
+## 熟悉常见的设计模式，可以熟练的运用在项目中
+
+## 理解 MVC、MVP、MVVM 的思想以及区别
+
+## 项目架构设计与重构
+
+## 项目组件化设计与开发
 
 
 
@@ -2747,19 +2935,29 @@ what?
 
 # **操作系统**
 
-### linux的进程调度算法 cow机制  
+![img](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
-参考:
-
-[COW奶牛！Copy On Write机制了解一下](https://juejin.im/post/5bd96bcaf265da396b72f855)
-
-内存管理
-
-### 虚拟内存的三级页表机制、缺页机制
+[操作系统面试重难点总结](https://juejin.im/entry/592257b62f301e006b183b95)
 
 
 
-### epoll pipe
+## CPU 调度
+
+## 进程管理
+
+linux的进程调度算法 cow机制 
+
+- 参考: [COW奶牛！Copy On Write机制了解一下](https://juejin.im/post/5bd96bcaf265da396b72f855)
+
+## 文件系统
+
+## 内存管理
+
+虚拟内存的三级页表机制、缺页机制
+
+
+
+epoll pipe
 
 select poll epoll 区别
 
@@ -2811,9 +3009,9 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 
  [技术博客笔记大汇总【15年10月到至今】](https://juejin.im/post/5cce410551882541e40e471d#heading-2)
 
+[Android专家级别的面试总结](https://blog.csdn.net/qingtiantianqing/article/details/55211986)
 
-
-
+[Android 年薪百万的进阶攻略 —— 资深（专家）工程师学习路线](https://blog.csdn.net/freekiteyu/article/details/88179412)
 
 
 
