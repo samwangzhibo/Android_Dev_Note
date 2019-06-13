@@ -2125,6 +2125,20 @@ Scroller
 
 ## 10. 视图
 
+## 0. TextView
+
+- 简介
+
+  ​	提供文本展示功能的控件
+
+- 测量过程
+
+  ​	根据字体个数和字体宽度
+
+- 绘制过程和Spanable
+
+  ​	绘制分为文本的绘制和Spanable的绘制。
+
 ### 1. SurfaceView
 
 - Why?
@@ -2921,6 +2935,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # 设计模式
 
+[快速理解-设计模式六大原则](https://www.jianshu.com/p/807bc228dbc2)
+
 ## 熟悉六大 OOD 设计原则
 
 
@@ -2946,6 +2962,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 ![](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
 [操作系统面试重难点总结](https://juejin.im/entry/592257b62f301e006b183b95)
+
+[真香警告：即使不学 OS 进阶，也请务必收藏好该文！](https://juejin.im/post/5cf6a3845188253b2441287e)
 
 ## CPU 调度
 
