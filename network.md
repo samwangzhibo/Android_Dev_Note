@@ -87,6 +87,26 @@ Https的加密机制是一种共享密钥加密和公开密钥加密并用的混
 
 
 
+**Http报文**
+
+``` html
+HTTP/1.1 200 OK
+Date: Tue, 27 Mar 2018 16:50:26 GMT
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+
+<!DOCTYPE html>
+<html>
+<head>
+<base href="https://pages.kaola.com/" />
+<meta charset="utf-8"/> <title> 网易考拉 3 周年主会场 </title>
+
+```
+
+
+
+
+
 
 
 ### **传输层**

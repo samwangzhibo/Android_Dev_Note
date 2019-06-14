@@ -111,6 +111,12 @@
   - 并行和串行收集器
   - CMS 收集器 “最短回收停顿优先”收集器（标记—清除算法：初始标记—并发标记—重新标记—并发清除）
 
+
+
+Android虚拟机的特性
+
+
+
 ## <a id="1.注解">1.注解</a>
 
 - 背景
@@ -3217,6 +3223,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # <a id="计算机网络">**计算机网络**</a>
 
+![网络协议只是图谱](assets/网络协议知识图谱.jpg)
+
 [network.md](network.md)
 
 [Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
@@ -3271,9 +3279,13 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 
 ## 数组相关
 
-参考
 
-[剑指offer](https://github.com/LRH1993/android_interview)
+
+## 参考
+
+[算法大纲](https://github.com/LRH1993/android_interview)
+
+[剑指offer](https://github.com/LRH1993/android_interview/blob/master/algorithm/For-offer.md)
 
 
 
