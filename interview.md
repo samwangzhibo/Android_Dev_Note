@@ -1,8 +1,8 @@
-目录
+# 目录
 
 ---
 
-**Java基础**
+[**Java基础**](#Java基础)
 
 -  [JVM内存模型](#内存模型)
 -  [注解](#1.注解)
@@ -22,7 +22,7 @@
 
 ---
 
-**Java并发编程**
+[**Java并发编程**](#Java并发编程)
 
 -  [线程](#线程)
   + [Thread类(sleep、join、yield、interrupt)](#Thread类)
@@ -37,7 +37,7 @@
 
 ---
 
-**Android**
+[**Android**](#Android)
 
 - Handler
 - Binder
@@ -61,27 +61,27 @@
 
 ---
 
-**其他**
+[**Android其他**](#Android其他)
 
 - [kotlin](#kotlin)
 - [上传库到Maven](#上传到Maven)
 
 ---
 
-**计算机网络**
+[**计算机网络**](#计算机网络)
 
 ---
 
-**操作系统**
+[**操作系统**](#操作系统)
 
 - [死锁](#死锁)
 
 ---
-**算法**
+[**算法**](#算法)
 
 
 
-# Java基础
+# <a id="Java基础">Java基础</a>
 
 ---
 
@@ -99,7 +99,7 @@
   - 1.程序计数器，引用+1，销毁、失效-1 
   - 2.可达性分析 
     
-    -  ## GRoot 静态对象、常量池对象
+    -  GRoot 静态对象、常量池对象
 - 分代回收
   - **新生代**： 一个eden区，两个存活区。Eden满后，把存活的对象复制到存活区。存活区满后，把仍存活的对象复制到另一个存活区，这个也满了后，仍存活的复制到另一个存活区。**一次只有一个存活区**
     - young gc：停止复制算法stop-the-world 
@@ -644,7 +644,7 @@ public enum CustomEnum {
 
 ---
 
-#**Java并发编程**
+#<a id="Java并发编程">**Java并发编程**</a>
 
 ## 1. Q：什么是线程安全？保障线程安全有哪些手段？`
 
@@ -1189,7 +1189,7 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 ---
 
-# Android
+# <a id="Android">Android</a>
 
 ## 0. Android概论
 
@@ -2829,7 +2829,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
-# **其他**
+# <a id="Android其他">**其他**</a>
 
 ## <a id="kotlin">kotlin</a>
 
@@ -2933,7 +2933,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 [flutter.md](flutter.md)
 
-# 设计模式
+# <a id="设计模式">设计模式</a>
 
 ## 三大特征
 
@@ -3215,13 +3215,13 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
-# **计算机网络**
+# <a id="计算机网络">**计算机网络**</a>
 
 [network.md](network.md)
 
 [Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
 
-# **操作系统**
+# <a id="操作系统">**操作系统**</a>
 
 ![](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
@@ -3267,7 +3267,7 @@ apcs调用，sp寄存器的作用，armcpu的三级流水线，和ldr   Blx bl b
 
 
 
-# 算法
+# <a id="算法">算法</a>
 
 ## 数组相关
 
