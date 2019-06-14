@@ -16,9 +16,8 @@
     -  迭代器
 -  [异常](#异常)
 
-**其他**
-
-- [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
+- **其他**
+  - [final、finally、finalize()分别表示什么含义](#final、finally、finalize)
 
 ---
 

@@ -247,7 +247,7 @@
 
   通过ViewModel实现，Model与View的双向绑定，视图树的变化会修改数据，数据的变化会去刷新视图树，从而实现视图的刷新。
 
-![image-20190613183410338](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190613183410338.png)
+![image-20190613183410338](assets/image-20190613183410338.png)
 
 - 怎么实现？
 
@@ -269,7 +269,7 @@
 
 ## 项目架构设计与重构
 
-![image-20190613183305873](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190613183305873.png)
+![image-20190613183305873](assets/image-20190613183305873.png)
 
 
 
