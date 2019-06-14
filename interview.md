@@ -3187,6 +3187,24 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ![image-20190613183410338](assets/image-20190613183410338.png)
 
+- 怎么实现？
+
+  通过DataBinding框架，使用ViewModel实现Model和View的双向绑定。
+
+- 优点
+
+  ​	不需要手动去维护View和数据的状态，只需要定义他们的绑定关系。
+
+- 缺点
+
+  
+
+- 适用场景
+
+  
+
+  ​	
+
 ## 项目架构设计与重构
 
 ![image-20190613183305873](assets/image-20190613183305873.png)
@@ -3201,7 +3219,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 [network.md](network.md)
 
-[Awesome-Android-Interview]([https://github.com/JsonChao/Awesome-Android-Interview/blob/master/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E7%BD%91%E7%BB%9C%E9%9D%A2%E8%AF%95%E9%A2%98.md](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md))
+[Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
 
 # **操作系统**
 
