@@ -647,9 +647,74 @@ public enum CustomEnum {
 
 
 
----
+### 9.2 JIT(HotSpot 虚拟机)
+
+- 背景：
+
+  ​	加速热点代码的运行
+
+- 原理 
+
+  ​	Java程序最初是通过解释器进行解释执行的，当虚拟机发现**某个方法或代码块**运行的**特别频繁**时，就会把这些代码认定为**“热点代码”（Hot Spot Code）**。为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成为**本地平台相关的机器码**，并进行优化，而完成这个任务的编译器称为及时编译器（Just In Time Compiler，简称JIT）。
+
+
+
+AOT
+
+[AOT,JIT区别，各自优劣，混合编译](https://blog.csdn.net/h1130189083/article/details/78302502)
+
+
+
+
 
 #<a id="Java并发编程">**Java并发编程**</a>
+
+## 0. 为什么需要多线程
+
+好处：
+1. 解决了一个进程中可以同时执行多个任务的问题。
+2. 提高了资源的利用率。
+弊端：
+1. 增加了CPU的负担，
+2. 降低了一个进程中线程的执行概率（CPU是进程之间不断来回切换的）
+3. 出现了线程安全问题。
+4. 会引发死锁现象。
+
+## 0.1 锁的引入
+
+学习锁之前我们肯定要学习下线程，线程是CPU调度的最小单元。
+
+```
+public class ThreadTest {
+    public static int num = 0;
+    public static void main(String[] args) {
+        //1.开启10个线程去修改num的值 可以看到每次执行的结果不同
+        for (int i=0; i< 10; i++){
+            new Thread(){
+                @Override
+                public void run() {
+                    super.run();
+                    num++;
+                }
+            }.start();
+        }
+        System.out.println("num = " + num);
+    }
+}
+```
+
+如果开10个线程去给 `num` 变量自增1，那么结果是多少呢？ 
+10? 答案是不确定。因为i++操作可以看成3个操作
+
+1. 从主内存获取 `num` 的值，拷贝到线程工作内存
+2. 执行`num = num+1` 操作，把 `i` 的值添加1，然后赋值给i
+3. 把 `num` 的值写回主存
+
+所以我们可以看到，如果在第1步 中2个线程同时取值，然后在第3步写的时候，那么他们写的值是一样的，那么最后得到的 `num` 值肯定不是10
+
+那么怎么处理这个问题呢？
+
+
 
 ## 1. Q：什么是线程安全？保障线程安全有哪些手段？`
 
@@ -839,17 +904,9 @@ ThreadLocal类
 
 
 
-## 6. JIT(HotSpot 虚拟机)
 
-- 背景：加速热点代码的运行
 
-- 原理 
-
-  Java程序最初是通过解释器进行解释执行的，当虚拟机发现**某个方法或代码块**运行的**特别频繁**时，就会把这些代码认定为**“热点代码”（Hot Spot Code）**。为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成为**本地平台相关的机器码**，并进行优化，而完成这个任务的编译器称为及时编译器（Just In Time Compiler，简称JIT）。
-
----
-
-## 7. Lock
+## 6. Lock
 
 ### <a id="ReentrantLock">ReentrantLock</a>
 
@@ -1015,7 +1072,7 @@ ThreadLocal类
 
 
 
-## <a id="volatile">8. volatile</a>
+## <a id="volatile">7. volatile</a>
 
 (背景) `volatile` 的引入保证了线程并发的可见性。
 
@@ -1035,7 +1092,7 @@ ThreadLocal类
 
 ![image-20190612162615576](../assets/image-20190612162615576.png)
 
-## <a id="cas">9. CAS (compare and swap)</a>
+## <a id="cas">8. CAS (compare and swap)</a>
 
 - 背景
 
@@ -1073,7 +1130,7 @@ ThreadLocal类
 
 
 
-## <a id="线程池">10. 线程池</a>
+## <a id="线程池">9. 线程池</a>
 
 - 背景：线程池主要是为了解决**频繁创建线程的CPU和资源开销**，还可以**控制最大的线程数量**，核心的线程数量，回收线程，队列化的处理，还有拒绝策略
 - 使用：核心线程数，最大线程数，回收时间、拥塞队列、线程工厂、拒绝Handler
@@ -1708,9 +1765,9 @@ GPU: measure -> layout -> draw(之前都是在CPU中) -> GPU(OpenGL ES) -> Reste
 
 ## 5. TouchEvent事件传递机制
 
-![image-20190418151849681](picture/image-20190418151849681.png)
+![image-20190418151849681](../assets/image-20190418151849681.png)
 
-![image-20190418151939418](picture/image-20190418151939418.png)
+![image-20190418151939418](../assets/image-20190418151939418.png)
 
 [Input系统—UI线程](http://gityuan.com/2016/12/24/input-ui/)
 
@@ -3224,7 +3281,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ![网络协议只是图谱](../assets/网络协议知识图谱.jpg)
 
-[network.md](/network.md)
+[network.md](../network.md)
 
 [Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
 
@@ -3232,7 +3289,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
-[operating_system.md](operating_system.md)
+[operating_system.md](../operating_system.md)
 
 # 汇编
 

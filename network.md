@@ -1,6 +1,6 @@
 ## 计算机网络
 
-![网络协议只是图谱](../assets/网络协议知识图谱.jpg)
+![网络协议只是图谱](assets/网络协议知识图谱.jpg)
 
 ![image-20190614113119196](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190614113119196.png)
 

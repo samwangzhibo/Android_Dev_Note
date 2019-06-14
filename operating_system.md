@@ -1,5 +1,5 @@
 # 操作系统
-![操作系统知识图谱](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![操作系统知识图谱](https://user-gold-cdn.xitu.io/2017/5/22/9ec446cf01928b9a62f9d852690476bd?imageslim)
 
 [操作系统面试重难点总结](https://juejin.im/entry/592257b62f301e006b183b95)
 
