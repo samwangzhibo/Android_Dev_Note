@@ -1,12 +1,11 @@
 # Summary
 
 * [简介](README.md)
-* [Java](chapter1.md)
-  * [基础](chapter1/javaji-chu.md)
-  * [并发](#)
-* [面试点](/interview.md)
-
+* Java
+  * [基础](java/java_base.md)
+  * [并发](java/java_bingfa.md)
 * [Android](android.md)
+* [设计模式](design_patterns.md)
 
 
 

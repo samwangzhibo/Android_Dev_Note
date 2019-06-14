@@ -2835,7 +2835,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
-# <a id="Android其他">**其他**</a>
+# <a id="Android其他">**Android其他**</a>
 
 ## <a id="kotlin">kotlin</a>
 
@@ -3225,7 +3225,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ![网络协议只是图谱](../assets/网络协议知识图谱.jpg)
 
-[network.md](network.md)
+[network.md](/network.md)
 
 [Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
 
