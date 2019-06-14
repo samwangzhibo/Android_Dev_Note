@@ -1034,7 +1034,7 @@ ThreadLocal类
 
 (原理) `volatile` 会让编译的汇编代码加上 `lock`前缀，`lock` 之后的写操作，会让其他CPU的相关缓存失效，从而重新从主内存加载最新数据。
 
-![image-20190612162615576](assets/image-20190612162615576.png)
+![image-20190612162615576](../assets/image-20190612162615576.png)
 
 ## <a id="cas">9. CAS (compare and swap)</a>
 
@@ -1693,9 +1693,9 @@ GPU: measure -> layout -> draw(之前都是在CPU中) -> GPU(OpenGL ES) -> Reste
 
 **GPU CPU Display双缓冲技术** VSYNC**信号**
 
-![image-20190607003211521](assets/image-20190607003211521.png)
+![image-20190607003211521](../assets/image-20190607003211521.png)
 
-![image-20190607003222554](assets/image-20190607003222554.png)
+![image-20190607003222554](../assets/image-20190607003222554.png)
 
 参考
 
@@ -3191,7 +3191,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
   通过ViewModel实现，Model与View的双向绑定，视图树的变化会修改数据，数据的变化会去刷新视图树，从而实现视图的刷新。
 
-![image-20190613183410338](assets/image-20190613183410338.png)
+![image-20190613183410338](../assets/image-20190613183410338.png)
 
 - 怎么实现？
 
@@ -3213,7 +3213,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ## 项目架构设计与重构
 
-![image-20190613183305873](assets/image-20190613183305873.png)
+![image-20190613183305873](../assets/image-20190613183305873.png)
 
 
 
@@ -3223,7 +3223,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # <a id="计算机网络">**计算机网络**</a>
 
-![网络协议只是图谱](assets/网络协议知识图谱.jpg)
+![网络协议只是图谱](../assets/网络协议知识图谱.jpg)
 
 [network.md](network.md)
 
