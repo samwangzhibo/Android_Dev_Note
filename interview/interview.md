@@ -667,7 +667,9 @@ AOT
 
 
 
-#<a id="Java并发编程">**Java并发编程**</a>
+#<a id="Java并发编程">Java并发编程</a>
+
+
 
 ## 0. 为什么需要多线程
 
@@ -2187,7 +2189,7 @@ Scroller
 
 ## 10. 视图
 
-## 0. TextView
+### 0. TextView
 
 - 简介
 
@@ -2902,6 +2904,25 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 ## Android Gradle Plugin
 
 通过阅读 Android Gradle Plugin 源码，理解 Gradle 构建项目的过程，了解插件开发过程。
+
+
+
+## JNI和NDK
+
+1. 在`Java`中声明`Native`方法（即需要调用的本地方法）
+2. 编译上述 `Java`源文件javac（得到 `.class`文件）
+3. 通过 `javah` 命令导出`JNI`的头文件（`.h`文件）
+4. 使用 `Java`需要交互的本地代码 实现在 `Java`中声明的`Native`方法
+
+> 如 `Java` 需要与 `C++` 交互，那么就用`C++`实现 `Java`的`Native`方法
+
+5. 编译`.so`库文件
+
+6. 通过`Java`命令执行 `Java`程序，最终实现`Java`调用本地代码
+
+参考:
+
+[Android：JNI 与 NDK到底是什么？（含实例教学）](https://www.jianshu.com/p/38859f881888)
 
 
 
