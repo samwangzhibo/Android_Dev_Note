@@ -229,7 +229,13 @@ Content-Language: zh-CN
 
 ![image-20190619201514356](/Users/wzb/Documents/Android_Dev_Note/assets/image-20190619201514356.png)
 
-  [网络传输中的三张表，MAC地址表、ARP缓存表以及路由表详解](https://www.jianshu.com/p/63fd0faa47da)
+-  选路的原理
+
+  
+
+- 参考
+
+   [网络传输中的三张表，MAC地址表、ARP缓存表以及路由表详解](https://www.jianshu.com/p/63fd0faa47da)
 
 
 
