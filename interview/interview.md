@@ -1261,7 +1261,7 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 [Android开发工程师面试指南](https://github.com/sucese/android-interview-guide)
 
-## 0.1 系统启动过程
+## 0.1 系统启动过程(待)
 
 ### init 进程
 
@@ -1396,6 +1396,8 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ## 2. Binder
 
+> Binder 是 Android 系统中特有的一种 IPC 通信方式，建议阅读 Binder 相关的源码，与深入越好，理解 Binder 工作的原理，了解服务的注册、获取、死亡通知的流程。
+
 - **Why?** 
 
   - **高效**，只拷贝一次，socket那些都需要拷贝2次，从用户空间到内核空间，再从内核空间到用户空间。`binder` 适用 `mmap` 系统调用，把用户空间和内核空间都映射到同一块物理页，4M，然后只需要拷贝到 这个地址，用户空间就完成了内容传递。
@@ -1437,7 +1439,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-## 2.1 其他IPC
+## 2.1 其他IPC(待)
 
 ### Socket
 
@@ -2740,7 +2742,7 @@ SurfaceTexture
 
 
 
-## 12. 核心服务
+## 12. 核心服务(待)
 
 ### ActivityManagerService（AMS）
 
@@ -2780,7 +2782,11 @@ SurfaceTexture
 
 
 
-## 13. 组件化、热修复与插件化
+## 13. 组件化、热修复与插件化(待)
+
+> - VirtualAPK、Tinker
+>
+>   通过阅读 VirtualAPK 源码，理解热修复、插件化的原理。
 
 ### 组件化
 
@@ -2901,7 +2907,7 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
-## Android Gradle Plugin
+## Android Gradle Plugin(待)
 
 通过阅读 Android Gradle Plugin 源码，理解 Gradle 构建项目的过程，了解插件开发过程。
 
