@@ -2071,6 +2071,10 @@ Scroller
 
 ## 8. 图片相关
 
+### Android中图片存储的位置
+
+
+
 ### Gif图的加载
 
 - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
@@ -2308,7 +2312,11 @@ SurfaceTexture
 
 - 背景
 
+  ​	实现一个布局，往往需要使用到RelativeLayout+LinearLayout
+
 - 是什么？
+
+  ​	它的出现主要是为了解决布局嵌套过多的问题，以灵活的方式定位和调整小部件。
 
 - 怎么用？
 
@@ -2316,6 +2324,8 @@ SurfaceTexture
 
 - 参考
 
+  [约束布局ConstraintLayout看这一篇就够了](https://www.jianshu.com/p/17ec9bd6ca8a)
+  
   
 
 ### 5.  ListView
@@ -2986,31 +2996,35 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 # **源码**
 
-## 1. Retrofit
+## 网络库
+
+### 1. Retrofit
+
+### 2. OKHttp
+
+
+
+## 图片库
+
+### 1. Glide
+
+### 2. Fresco
+
+
+
+## 事件流
+
+### 1. Rxjava 
 
 
 
 
 
-## 2. Rxjava
+## 性能工具
+
+### 1. leacany
 
 
-
-
-
-## 3. Glide
-
-
-
-
-
-## 4. OKHttp
-
-
-
-
-
-## 5. leacany
 
 
 
