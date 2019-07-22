@@ -718,7 +718,7 @@ public class ThreadTest {
 
 
 
-## 1. Q：什么是线程安全？保障线程安全有哪些手段？`
+## 1. Q：什么是线程安全？保障线程安全有哪些手段？
 
 > 技术点：线程安全
 >
@@ -1410,8 +1410,8 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 - **Sample (aidl)**
 
   - Impl 接口
-  - Stub 这个一个 `Binder`，继承impl接口，是服务端用的，有`onTransact`方法
-  - Proxy，是`BinderProxy`的代理，继承impl接口，有`Transact` 方法。
+  - Stub 这个一个 `Binder`，对应C层的BBinder，继承impl接口，是服务端用的，有`onTransact`方法
+  - Proxy，是`BinderProxy`的代理，对应C层的BpBinder，继承impl接口，有`Transact` 方法。
 
 - **跨进程观察者**
 
@@ -1500,9 +1500,8 @@ Window实际上是View的直接管理者。
 
 - 问题1：为什么有View还需要Window
 
-  View只关注视图的展示，比如视图多大 `onMeasure()`、视图放在哪 `onLayout()`
+  View只关注视图的展示，比如视图多大 `onMeasure()`、视图放在哪 `onLayout()` 视图怎么画 `onDraw()`，而Window(如PhoneWindow)需要关注一些手势事件的接收分发、一些按键的分发、主题啥的
 
-  视图怎么画 `onDraw()`，而Window(如PhoneWindow)需要关注一些手势事件的接收分发、一些按键的分发、主题啥的
 
 PhoneWindow
 
@@ -1522,9 +1521,8 @@ PhoneWindow
 
 > 1. 系统抽象的组件，由ActivityManagerService(AMS)管理，比如跳转其他Activity，实际上是调用AMS的`startActivity()`方法，
 >
-> 2. 提供生命周期，onCreate()、onStart() 等，提供Window的事件处理功能回调 dispatchTouchEvent()，不负责View
+> 2. 提供生命周期，onCreate()、onStart() 等，提供Window的事件处理功能回调 dispatchTouchEvent()，不负责View的绘制相关功能。
 >
->    的绘制相关功能。
 
 
 
@@ -1542,7 +1540,7 @@ PhoneWindow
 
 **流程图**(看不懂无所谓):
 
-![å¾3ï¼Androidç»å¶æºå¶_åå¾.jpg](https://upload-images.jianshu.io/upload_images/2911038-2922d52fe51235af.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](https://upload-images.jianshu.io/upload_images/2911038-2922d52fe51235af.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
 
@@ -1552,6 +1550,8 @@ applicationThread.scheduleLaunchActivity  ->  ActivityThread.LaunchActivity  -> 
 
 ->  ActivityThread.perfromResumeActivity -> windownManager.addView(创建viewRootImpl) -> windowGlobal.addView() ->  ViewRootImpl.requestLayout ->  ViewRootImpl.performTraversal
 
+**解释**:  Ams启动进程后，Activity
+
 ### 测量
 
 #### **执行流程**
@@ -1560,7 +1560,7 @@ ViewRootImpl.performTraversal -> performMeasure(根measureSpec，由window的大
 
 FrameLayout.onMeasure  ->   ViewGroup.measurechild(父布局的measpec和子布局的layoutparams计算出来的measureSpec) -> View.measure  -> View.onMeasure()
 
-​	View测量的最开始是由ViewRootImpl的performTraversal开始的，然后执行performMeasure()，调用DecorView的measure方法，DecorView是FrameLayout的子类，之后调用FrameLayout的onMeasure方法，onMeasure由会去找其childView，挨个执行measure()和onMeasure()
+**解释**：View测量的最开始是由ViewRootImpl的performTraversal开始的，然后执行performMeasure()，调用DecorView的measure方法，DecorView是FrameLayout的子类，之后调用FrameLayout的onMeasure方法，onMeasure由会去找其childView，挨个执行measure()和onMeasure()
 
 #### 参数解释
 
@@ -2920,6 +2920,21 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 ## Android Gradle Plugin(待)
 
 通过阅读 Android Gradle Plugin 源码，理解 Gradle 构建项目的过程，了解插件开发过程。
+
+**Version**:
+
+**compileSdkVersion**尽量填最新的，以确保你能使用最新的API。
+
+ **buildToolsVersion**尽量最高的，因为新的兼容旧的。
+
+ **minSdkVersion**可以适量填小一点，以确保更多的人群能够使用，建议填写**16(Android4.0)**，**4.0**以下的机型已经不多了。
+
+ **targetSdkVersion**可以根据需要来，比如想要使用到新系统的一些新特性。建议**22**，小于**Android6.0** 
+
+根据上述四个版本的特点，可以得出以下结论。
+ `minSdkVersion <= targetSdkVersion <= compileSdkVersion`
+
+
 
 
 
