@@ -6,7 +6,7 @@
 
 
 
-### **应用层、表示层、会话层**
+### **(一) 应用层、表示层、会话层**
 
 ####1、Http和Https的区别
 
@@ -43,7 +43,7 @@ Https的加密机制是一种共享密钥加密和公开密钥加密并用的混
 
    [SSL/TLS协议和https访问流程](http://forthxu.com/blog/article/63.html) [一篇文章看明白 HTTP，HTTPS，SSL/TSL 之间的关系](https://blog.csdn.net/freekiteyu/article/details/76423436)
 
-##### CA证书
+##### 3.1 CA证书
 
 - 作用
 
@@ -71,9 +71,35 @@ Https的加密机制是一种共享密钥加密和公开密钥加密并用的混
 
 ---
 
+##### 3.2 http面试题
+
+>  非必须
+
+- http如果维护状态
+
+  [【HTTP】三、HTTP状态保持机制（Cookie和Session）](https://www.cnblogs.com/gzshan/p/11125140.html)
+
+- http如何实现缓存
+
+  [HTTP 缓存机制详解](https://blog.csdn.net/guduyibeizi/article/details/81814577#HTTP_Cache_1)
+
+  [详解HTTP的缓存机制与原理](https://www.jianshu.com/p/f080181021cb)
+
+- tcp状态机(http状态机)
+
+  
+
+  
+
+>  必须
+
+- http1.0 http1.1 http 2.0差别 
+
+  越详细越好
 
 
-#### **DNS**(面试高频)
+
+#### **4. DNS**(面试高频)
 
 - What?
 
@@ -167,7 +193,7 @@ Content-Language: zh-CN
 
 
 
-### **传输层(TCP、UDP)**
+### **(二) 传输层(TCP、UDP)**
 
 #### 1.TCP协议如何来保证传输的可靠性
 
@@ -189,7 +215,7 @@ Content-Language: zh-CN
 
 
 
-### 网络层(IP)
+### (三) 网络层(IP)
 
 #### arp 地址解析协议
 
@@ -249,7 +275,7 @@ Content-Language: zh-CN
 
   ​	欲将B类IP地址168.195.0.0划分成若干子网，每个子网内有[主机](https://baike.baidu.com/item/主机)700台：
 
-  1)700=1010111100，该[二进制](https://baike.baidu.com/item/二进制)为十位数，N = 10
+  1)700=10 10111100，该[二进制](https://baike.baidu.com/item/二进制)为十位数，N = 10
 
   2)将子网掩码255.255.255.255从后向前的10位全部置0,即为： 11111111.11111111.11111100.00000000，也即255.255.252.0。
 
@@ -263,13 +289,13 @@ Content-Language: zh-CN
 
 
 
-### 数据链路层(mac)
+### (四) 数据链路层(mac)
 
 
 
 
 
-### 物理层
+### (五) 物理层
 
 #### 通信的数据包格式
 

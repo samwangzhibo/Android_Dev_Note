@@ -39,7 +39,7 @@
 [**Android**](#Android)
 
 - Handler
-- Binder
+- [Binder](#binder)
 - App启动过程
 - View绘制过程
 - TouchEvent事件分发
@@ -1394,13 +1394,13 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 [Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
 
-## 2. Binder
+## <a id="binder">2. Binder</a>
 
 > Binder 是 Android 系统中特有的一种 IPC 通信方式，建议阅读 Binder 相关的源码，与深入越好，理解 Binder 工作的原理，了解服务的注册、获取、死亡通知的流程。
 
 - **Why?** 
 
-  - **高效**，只拷贝一次，socket那些都需要拷贝2次，从用户空间到内核空间，再从内核空间到用户空间。`binder` 适用 `mmap` 系统调用，把用户空间和内核空间都映射到同一块物理页，4M，然后只需要拷贝到 这个地址，用户空间就完成了内容传递。
+  - **高效**，只拷贝一次，socket那些都需要拷贝2次，从用户空间到内核空间，再从内核空间到用户空间。`binder` 使用 `mmap` 系统调用，把用户空间和内核空间都映射到同一块物理页，4M，然后只需要拷贝到 这个地址，用户空间就完成了内容传递。
   - **安全**，协议里面带有uid验证
 
 - **use?**
@@ -1410,7 +1410,7 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 - **Sample (aidl)**
 
   - Impl 接口
-  - Stub 这个一个 `Binder`，对应C层的BBinder，继承impl接口，是服务端用的，有`onTransact`方法
+  - Stub 这是一个 `Binder`，对应C层的BBinder，继承impl接口，是服务端用的，有`onTransact`方法
   - Proxy，是`BinderProxy`的代理，对应C层的BpBinder，继承impl接口，有`Transact` 方法。
 
 - **跨进程观察者**
@@ -1439,7 +1439,22 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 
 
-## 2.1 其他IPC(待)
+
+
+### Messager
+
+> Messenger是一种轻量级的IPC方案，它的底层实现是AIDL，是执行进程间通信最简单的方法，用一个Hanlder以串行的方式处理队列中的消息，会在单一线程中创建包含所有请求的队列，这样您就不必对服务进行线程安全设计
+
+
+
+| IPC方案     | 优点                                            | 缺点                             |
+| ----------- | ----------------------------------------------- | -------------------------------- |
+| Messager    | 低并发，串行请求，系统通过HandlerThread保证串行 | 不支持高并发和RPC                |
+| aidl/Binder | 高并发，客户端并行请求，服务端并发处理          | 需要服务端自己处理多线程并发问题 |
+
+
+
+## 2.2 其他IPC(待)
 
 ### Socket
 
@@ -2222,6 +2237,12 @@ Scroller
 
 - 原理
 
+- 坑
+
+  [**解决SurfaceView渲染的各种疑难杂症**](https://blog.csdn.net/gfg156196/article/details/72899287)
+
+  [Android 中Textureview和SurfaceView使用问题总结](https://www.jianshu.com/p/aeb49d32875b)
+
   ​	
 
 - 对比
@@ -2230,10 +2251,17 @@ Scroller
   | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
   | 概要     | 显示视图，内置画布，提供图形绘制函数，触屏事件，按键事件函数；**必须** 在UI线程中更新画面，速度较慢。 | 基于View视图进行拓展的视图类，更适合2D游戏的开发；是View的子类，类似**双缓机制**，在新的线程中更新画面，所以刷新界面速度比View快。（双缓机制：即前台缓存和后台缓存，后台缓存计算场景、产生画面，前台缓存显示后台缓存已画好的画面。） |                                                              |
   | 刷新原理 | 主线程更新                                                   | SurfaceView可以通过SurfaceHolder.addCallback方法在子线程中更新UI。由于holder的存在，SurfaceView也不能进行像View一样的setAlpha和setRotation方法，但是对于一些类似于坦克大战等需要不断告诉更新画布的游戏来说，SurfaceView绝对是极好的选择。 | TextureView则可以通过TextureView.setSurfaceTextureListener在子线程中更新UI.但是比如视频播放器或相机应用的开发，TextureView则更加适合。 |
+  | 坑       |                                                              |                                                              | 必须使用硬件加速                                             |
 
 - 参考
 
+  [视频画面帧的展示控件SurfaceView及TextureView对比](https://www.jianshu.com/p/b9a1e66e95ea)
+  
   [Android面试题（29）-surfaceView与TextureView](https://blog.csdn.net/pgg_cold/article/details/79483731)
+  
+  [Android 硬件加速使用总结](https://blog.csdn.net/iblade/article/details/80240961)
+  
+  [Android EGL 错误信息定位方法](https://www.jianshu.com/p/981e0daf1bae)
 
 
 
@@ -3015,7 +3043,13 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 ### 1. Retrofit
 
+​	dp 动态代理
+
+
+
 ### 2. OKHttp
+
+nio
 
 
 
@@ -3030,6 +3064,12 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 ## 事件流
 
 ### 1. Rxjava 
+
+backpressure 背压
+
+场景：被观察者事件流发送速度>观察者事件流消费速度，造成缓冲区溢出
+
+
 
 
 
