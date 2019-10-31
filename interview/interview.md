@@ -263,15 +263,15 @@ public Destionation destionation(final String str) {
 
 
 ## <a id="动态代理">4.动态代理</a>
-- **好处：**
+- **好处**：
 
   ​	静态代理灵活，不需要每次一个方法都实现一遍。还有一个注意的地方就是，相当于把接口的方法全部拦截给 `InvocationHandler` 了，`Retrofit` 使用这个特性，把 `RPC` 的接口，拦截掉然后生成 `Request` 请求对象。
 
-- **使用：** 
+- **使用** ：
 
   ​	通过 `Proxy.newProxyInstance(classLoader，Class<?>[] interfaces, invocationHandler)` 生成代理对象
 
-- **原理：**
+- **原理**：
 
   ​	自己组装了一个继承自`Proxy`类实现 `inters` 接口的名字叫 `Proxy$0`的类，`Proxy` 类有一个`InvocationHandler` 成员，通过构造函数传入。所有实现的方法通过 `invoke` 方法把 `this`，`method`，`params`转发出去，然后调用一个 `native` 方法把这个字节流交给 `classLoader` 完成类加载。(具体例子参考  [LoveStudy](https://github.com/samwangzhibo/LoveStudy) 项目 `com.example.wangzhibo.lovestudy.jvm.dproxy`)
 ```java
@@ -621,7 +621,7 @@ public enum CustomEnum {
     - 执行异常（RuntimeException）
       - 特点：可能在执行方法期间抛出但未被捕获的`RuntimeException`的任何子类都**无需在`throws`**子句中进行声明
       - 举例：`Java.lang.IndexOutOfBoundsException` `Java.lang.ClassCastException`  `Java.lang.NullPointerException` `ConcurrentModifyException`
-    - 检查异常（Checked Exceptions）
+    - 受检异常（Checked Exceptions）
       - 特点：一个方法**必须通过throws**语句在方法的声明部分说明它可能抛出但并未捕获的所有checkedException
       - 举例：`Java.lang.ClassNotFoundException` `Java.lang.NoSuchMethodException` `InterruptedException` `Java.lang.NoSuchFieldException`
 
@@ -675,8 +675,13 @@ AOT
 
 好处：
 1. 解决了一个进程中可以同时执行多个任务的问题。
+
 2. 提高了资源的利用率。
+
+  
+
 弊端：
+
 1. 增加了CPU的负担，
 2. 降低了一个进程中线程的执行概率（CPU是进程之间不断来回切换的）
 3. 出现了线程安全问题。
@@ -706,7 +711,7 @@ public class ThreadTest {
 ```
 
 如果开10个线程去给 `num` 变量自增1，那么结果是多少呢？ 
-10? 答案是不确定。因为i++操作可以看成3个操作
+10? 答案是**不确定**。因为i++操作可以看成3个操作
 
 1. 从主内存获取 `num` 的值，拷贝到线程工作内存
 2. 执行`num = num+1` 操作，把 `i` 的值添加1，然后赋值给i
@@ -808,7 +813,7 @@ Thread thread2 = new Thread(){
 
 `Wait和Sleep的区别`
 
-- Wait和Sleep都不占用CPU，wait 会释放锁，sleep不释放锁
+- Wait和Sleep都**不占用CPU，wait 会释放锁，sleep不释放锁**
 - wait必须要在`synchronized`块里面使用，wait可以携带等待时间参数(限时等待，但是如果这个时候锁被占用，不能被分配给它，限时等待不能唤醒，原理就是jvm会在一段时间后，分配锁和时间片给它)，也可以不携带等待时间参数(不限时等待，直到其他线程调用 `notify`或者`notifyAll`唤醒他，`notify`的话是随机唤醒，没有处理好，容易造成线程一直处理等待状态，线程饥饿)， sleep的话是必须传入一个时间，阻塞一段时间后，再由操作系统唤醒。
 
 
@@ -820,9 +825,14 @@ Thread thread2 = new Thread(){
 ## <a id="ThreadLocal">3. ThreadLocal</a>
 ThreadLocal类
 
-- 背景：可实现线程本地存储的功能，把共享数据的可见范围限制在同一个线程之内，无须同步就能保证线程之间不出现数据争用的问题，这里可理解为ThreadLocal很方便的找到本线程的Looper。
+- 背景：
+
+  ​	可实现线程本地存储的功能，把共享数据的可见范围限制在同一个线程之内，无须同步就能保证线程之间不出现数据争用的问题，这里可理解为ThreadLocal很方便的找到本线程的Looper。
   使用：ThreadLocal<T>.set(T)  ThreadLocal.get()
-- 原理：每个线程的Thread对象中都有一个ThreadLocalMap 对象`ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue)`，它存储了一组以ThreadLocal.threadLocalHashCode为key、以本地线程变量为value的键值对，而ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，也就包含了一个独一无二的threadLocalHashCode值，通过这个值就可以在线程键值值对中找回对应的本地线程变量。
+
+- 原理：
+  
+  ​	每个线程的Thread对象中都有一个ThreadLocalMap 对象`ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue)`，它存储了一组以ThreadLocal.threadLocalHashCode为key、以本地线程变量为value的键值对，而ThreadLocal对象就是当前线程的ThreadLocalMap的访问入口，也就包含了一个独一无二的threadLocalHashCode值，通过这个值就可以在线程键值值对中找回对应的本地线程变量。
   需要注意的点就是ThreadLocal的Entry使用的是弱引用，是因为ThreadLocal变量会被线程一直持有，容易造成内存泄露 ，所以使用弱引用。
 
 ## <a id="Synchronized">4. synchronized</a>
@@ -1261,6 +1271,8 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 [Android开发工程师面试指南](https://github.com/sucese/android-interview-guide)
 
+
+
 ## 0.1 系统启动过程(待)
 
 ### init 进程
@@ -1390,9 +1402,11 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ```
 
-参考
+- 参考
 
-[Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
+  [Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
+
+  
 
 ## <a id="binder">2. Binder</a>
 
@@ -1444,8 +1458,6 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 ### Messager
 
 > Messenger是一种轻量级的IPC方案，它的底层实现是AIDL，是执行进程间通信最简单的方法，用一个Hanlder以串行的方式处理队列中的消息，会在单一线程中创建包含所有请求的队列，这样您就不必对服务进行线程安全设计
-
-
 
 | IPC方案     | 优点                                            | 缺点                             |
 | ----------- | ----------------------------------------------- | -------------------------------- |
@@ -1561,9 +1573,13 @@ PhoneWindow
 
 ### ViewRootImpl的创建
 
+-> 
+
 applicationThread.scheduleLaunchActivity  ->  ActivityThread.LaunchActivity  ->  Activity.attach(创建phoneWindow)  -> Activity.onCreate(setContentView，生成DecorView，解析layout文件并添加到contentView里面，构建视图树) 
 
-->  ActivityThread.perfromResumeActivity -> windownManager.addView(创建viewRootImpl) -> windowGlobal.addView() ->  ViewRootImpl.requestLayout ->  ViewRootImpl.performTraversal
+->  
+
+ActivityThread.perfromResumeActivity -> windownManager.addView(创建viewRootImpl) -> windowGlobal.addView() ->  ViewRootImpl.requestLayout ->  ViewRootImpl.performTraversal
 
 **解释**:  Ams启动进程后，Activity
 
@@ -1643,10 +1659,10 @@ DecorView.onLayout()子类重写 -> FrameLayout.onLayout() -> getChildAt(i).layo
 **onLayout(isChanged, left, top, right, bottom)**
 
 1. isChanged：这次重新布局该View在父布局中的位置是否变化
-2. Left: 该View的左边距离父布局中左边的距离
-3. Top: 该View的顶部距离父布局顶部的距离
-4. Right: 该View的右边距离父布局的左侧距离
-5. Bottom:该View的底部距离父布局的距离
+2. Left: 该View的左边距离父布局中**左边**的距离
+3. Top: 该View的顶部距离父布局**顶部**的距离
+4. Right: 该View的右边距离父布局的**左侧**距离
+5. Bottom:该View的底部距离父布局**顶部**的距离
 
 ![img](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1559823633654&di=9ed02a4c9b20febdcead8eeffa4c95a5&imgtype=0&src=http%3A%2F%2Faliyunzixunbucket.oss-cn-beijing.aliyuncs.com%2Fjpg%2Fac7efbde7d7e008e53d58c92afddde59.jpg%3Fx-oss-process%3Dimage%2Fresize%2Cp_100%2Fauto-orient%2C1%2Fquality%2Cq_90%2Fformat%2Cjpg%2Fwatermark%2Cimage_eXVuY2VzaGk%3D%2Ct_100)
 
@@ -1748,7 +1764,7 @@ onDraw(Canvas canvas)
 
 > 这章主要是讲解framework层面，为啥canvas draw()了之后，就能显示到屏幕上了，包括60s渲染一次是谁控制的，OpenGl是怎么调用的，扩展讲一下CPU GPU双缓冲机制，这一块和SurfaceView和紧耦合
 
-SurfaceFlinger FrameBuffer Surface  
+相关类：`SurfaceFlinger`  `FrameBuffer`  `Surface`  
 
 framework层 EventThread(接收VSync事件通知)  HWComposer(处理部分SurfaceFlinger委托过来的合成工作) EGL(OpenGL是一个操作GPU的API CPU到GPU)  display
 
@@ -2045,7 +2061,6 @@ Scroller
   | ---- | ------------------------------------ | ---------------------- |
   | 性能 | 只是画布的变化，性能好               | 需要反射，需要整体刷新 |
   | 位置 | 只改变画布，不改变属性，点击位置不变 | 改变属性，点击位置改变 |
-  |      |                                      |                        |
   
   
 
@@ -2408,6 +2423,8 @@ SurfaceTexture
 
   [Android面试---ListView原理及fling分析](https://blog.csdn.net/wangzhibo666/article/details/87370137)
 
+
+
 ### 6. RecyclerView
 
 - 背景
@@ -2422,6 +2439,7 @@ SurfaceTexture
   - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
   - 支持单个Item刷新
   - 默认封装ViewHolder操作
+  - 自定义缓存池
   
 - 怎么实现的？
 
@@ -2480,6 +2498,10 @@ SurfaceTexture
    SnapHelper
 
   > 在某些场景下，卡片列表滑动浏览[有的叫轮播图]，希望当滑动停止时可以将当前卡片停留在屏幕某个位置，比如停在左边，以吸引用户的焦点。那么可以使用RecyclerView + Snaphelper来实现
+  
+  RecycledViewPool
+  
+  > 缓存池，针对 ItemType来的
 
 
 
@@ -3057,6 +3079,8 @@ nio
 
 ### 1. Glide
 
+
+
 ### 2. Fresco
 
 
@@ -3347,7 +3371,7 @@ backpressure 背压
 
 - 怎么实现？
 
-  通过DataBinding框架，使用ViewModel实现Model和View的双向绑定。
+  ​	通过DataBinding框架，使用ViewModel实现Model和View的双向绑定。
 
 - 优点
 
@@ -3373,11 +3397,15 @@ backpressure 背压
 
 
 
+
+
+
+
 # <a id="计算机网络">**计算机网络**</a>
 
 ![网络协议只是图谱](../assets/网络协议知识图谱.jpg)
 
-[network.md](../network.md)
+[计算机网络详解(network.md)](../network.md)
 
 [Awesome-Android-Interview](https://github.com/JsonChao/Awesome-Android-Interview/blob/master/计算机基础/网络面试题.md)
 
@@ -3385,7 +3413,7 @@ backpressure 背压
 
 
 
-[operating_system.md](../operating_system.md)
+[操作系统(operating_system.md)](../operating_system.md)
 
 # 汇编
 
@@ -3420,7 +3448,7 @@ BP: 基数指针寄存器BP(base pointer)是一个寄存器，它的用途有点
 
 - 为什么需要三级流水线?
 - 什么是？
-- 怎么运作的
+- 怎么运作的?
 
 ldr   
 
