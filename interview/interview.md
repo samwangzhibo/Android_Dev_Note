@@ -8,7 +8,7 @@
 -  [注解](#1.注解)
     -  [`getAnnotation` 过程](#getAnnotation的流程)
 -  [内部类](#内部类)
--  [final](#final)
+-  [final](#final) 
 -  [动态代理](#动态代理)
 -  [枚举](#枚举)
 -  [范型](#范型)
@@ -683,8 +683,7 @@ Dalvik使用JIT
 
 ART 使用AOT
 在安装apk时会进行预编译，生成OAT文件，仍以.odex保存，但是与Dalvik下不同，这个文件是可执行文件
-dex、odex 均可通过dex2oat生成oat文件，以实现兼容性
-在大型应用安装时需要更多时间和空间
+dex、odex 均可通过dex2oat生成oat文件，以实现兼容性，在大型应用安装时需要更多时间和空间
 
 
 
@@ -725,6 +724,29 @@ dex、odex 均可通过dex2oat生成oat文件，以实现兼容性
   ​	2). 多态之所以能够实现依赖于继承、接口和重写、重载（继承和重写最为关键）。有了继承和重写就可以实现父类的引用指向不同子类的对象。重写的功能是："重写"后子类的优先级要高于父类的优先级，但是“隐藏”是没有这个优先级之分的。  
 
   ​	3). **静态属性、静态方法和非静态的属性都可以被继承和隐藏而不能被重写，因此不能实现多态**，不能实现父类的引用可以指向不同子类的对象。非静态方法可以被继承和重写，因此可以实现多态。  
+
+- 参考
+
+  [为什么Java中类的成员变量不能被重写？](https://www.jianshu.com/p/4997c338d60e?1490580924986)
+
+
+
+### 9.4 Object对象
+
+```
+hashCode  hashmap计算
+clone 深拷贝
+equals comparable/comparator,比较对象相等
+toString 
+finalize 对象回收之前调用
+getClass 获取对象的类
+
+void wait(long millis) 暂停调用的线程
+void notify() 随机恢复暂停的线程
+void notifyAll() 恢复所有暂停线程
+```
+
+
 
 
 
@@ -1377,9 +1399,9 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
    **ps** : 
 
-   > 将Message加入MessageQueue时，处往管道写入字符，可以会唤醒loop线程；
+   > 1. 将Message加入MessageQueue时，处往管道写入字符，可以会唤醒loop线程；
    >
-   > 如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
+   > 2. 如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
 
 ![handler_java](http://gityuan.com/images/handler/handler_java.jpg)
 
@@ -2164,11 +2186,15 @@ Scroller
 
 ### Android中图片存储的位置
 
+​	7.0之后，native内存
+
 
 
 ### Gif图的加载
 
 - 要点：自定义 `Drawable` ，在系统回调 `setVisible`的时候开启 `gif` 动画，在 `setInVisible` 的时候关掉 `gif` 动画。开启的时候，先设置第一帧，然后抛一个延时消息到主线程，等待延时完成之后，加载下一帧，然后调用 `invalidate` 刷新，最后调用 `Drawale#draw(canvas)`  
+
+  
 
 ### Lru算法
 
@@ -3150,13 +3176,330 @@ nio
 
 ### 1. Rxjava 
 
-backpressure 背压
+- what?
 
-场景：被观察者事件流发送速度>观察者事件流消费速度，造成缓冲区溢出
+  ​	事件流、观察者、异步、链式调用
+
+- how？
+
+  ```java
+  Observable
+  .just(1)
+    .subscrbeOn()
+    .observeOn()
+    .subscribe(consumer)
+  ```
+
+  
+
+just
+
+> 发送多个事件
+
+```java
+Observable.just(student1, student2, student2)
+                //使用map进行转换，参数1：转换前的类型，参数2：转换后的类型
+                .map(new Func1<Student, String>() {
+                    @Override
+                    public String call(Student i) {
+                        String name = i.getName();//获取Student对象中的name
+                        return name;//返回name
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        nameList.add(s);
+                    }
+                });
+```
+
+filter
+
+> 过滤
+
+```java
+ApiManger apiManger = RetrofitHelper.getManger();
+        apiManger.getState()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .filter(new Func1<StateModel, Boolean>() {
+                    @Override
+                    public Boolean call(StateModel stateModel) {
+                        return stateModel.getCode() == 0; //过滤
+                    }
+                })
+                .subscribe(new Subscriber<StateModel>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(StateModel stateModel) {
+                        if (stateModel.getState() == 0) {
+                            Logger.e("online");
+                        } else {
+                            Logger.e("offline");
+                        }
+                    }
+                });
+```
 
 
 
+compose
 
+> 
+
+flat (铺平）
+
+> 
+
+merge
+
+> merge组合的多个Observable在不同线程并发发射时，收到的数据可能会交错，而concat则无论怎样都不会交错，都是按顺序接收。
+
+concat (拼接)
+
+> merge组合的多个Observable在不同线程并发发射时，收到的数据可能会交错，而concat则无论怎样都不会交错，都是按顺序接收。
+
+
+
+map (映射)
+
+> 类型转换
+
+```java
+// 1.简单使用
+LiveApi.getApiService()
+        .liveCheckResolution(mStreamType.toInt(), cpuCoreCount, cpuMaxFreq)
+        .map(new ResponseFunction<CheckResolutionResponse>())
+  
+ public class ResponseFunction<T> implements Function<Response<T>, T> {
+   @Override
+   public T apply(@NonNull Response<T> response) throws Exception {
+     return response.body();
+   }
+}
+
+// 2.多次使用
+//多次使用map，想用几个用几个
+        Observable.just("Hello", "World")
+                .map(new Func1<String, Integer>() {//将String类型的转化为Integer类型的哈希码
+                    @Override
+                    public Integer call(String s) {
+                        return s.hashCode();
+                    }
+                })
+                .map(new Func1<Integer, String>() {//将转化后得到的Integer类型的哈希码再转化为String类型
+                    @Override
+                    public String call(Integer integer) {
+                        return integer.intValue() + "";
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        Log.i(TAG, s);
+                    }
+                });
+```
+
+flatmap
+
+> 转化之后再抛出事件 
+
+```java
+ApiManger apiManger = RetrofitHelper.getManger();
+        apiManger.getState()
+                .flatMap(new Func1<StateModel, Observable<ChargeModel>>() {
+                    @Override
+                    public Observable<ChargeModel> call(StateModel stateModel) {
+                       return stateModel.getState() != 0 ? Observable.empty() : apiManger.getCharge();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<ChargeNodel>() {
+                    @Override
+                    public void onCompleted() {
+                        //hideLoading();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        //hideLoading();
+                    }
+
+                    @Override
+                    public void onNext(ChargeModel chargeModel) {
+                        if（chargeModel.getCharge() > 0）{
+                             //拨打电话
+                        }
+                    }
+                });
+```
+
+concatMap
+
+> 参考：[RxJava 操作符flatMap 与 concatMap详解](https://www.jianshu.com/p/f67e05d7cd30)
+>
+> **concatMap 最终输出的数据序列和原数据序列是一致，它是按顺序链接Observables，而不是合并(flatMap用的是合并)。**
+
+
+
+zipwith
+
+> 参考 [RxJava（五）zipWith操作符](https://www.jianshu.com/p/6633e635910f)
+>
+> 2个事件同时满足 
+
+```java
+ApiManger apiManger = RetrofitHelper.getManger();
+        apiManger.getState()
+                .zipWith(apiManger.getCharge(), (stateModel, chargeModel) -> stateModel.getState() == 0 && chargeModel.getCharge() > 0)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(canCall -> {
+                    if (canCall) {
+                        //拨打电话
+                    }
+                }, throwable -> Logger.e(throwable.toString()));
+```
+
+doOnNext()
+
+> 和onNext()的区别：doOnNext在onNext()之后，在构建被观察者时使用
+
+doOnError()
+
+> 和onError()的区别：doOnError在onError()之后，在构建被观察者时使用
+
+
+
+onErrorReturnItem
+
+> 在错误或异常发生时返回一个跟源Observable相同类型的项目
+
+
+
+例子1
+
+```java
+Observable<QLivePushConfig> requestStartPush(
+      final File coverFile,
+      final boolean isPushOrigin,
+      @Nullable final PrePushResponse prePushResponse) {
+    String liveTitle = mLayout.getLiveTitle();
+    int cpuCoreCount = CpuInfoUtils.getCpuCoreCount();
+    double cpuMaxFreq = CpuInfoUtils.getCpuMaxFreq();
+    return LiveApi.getApiService()
+        .liveCheckResolution(mStreamType.toInt(), cpuCoreCount, cpuMaxFreq)
+        .map(new ResponseFunction<CheckResolutionResponse>())
+        .doOnNext(
+            response -> {
+              LiveDebugLogger.logEvent("requestStartPush", "check resolution request succeed");
+              com.smile.gifshow.live.DefaultPreferenceHelper
+                  .setLivePushCheckResolutionResponse(response);
+            })
+        .doOnError(throwable -> {
+          LiveDebugLogger.logEvent("requestStartPush",
+              "check resolution request fail, use local cache instead");
+          throw new Exception(throwable);
+        })
+        .onErrorReturnItem(
+            com.smile.gifshow.live.DefaultPreferenceHelper.getLivePushCheckResolutionResponse(
+                CheckResolutionResponse.class))
+        .zipWith(
+            startPush(
+                mUseLastAuditedCover,
+                prePushResponse != null && isPushOrigin,
+                mStreamType.toInt(),
+                liveTitle,
+                mCourse,
+                mAvailableMagicFaceIds,
+                coverFile,
+                Md5Util.md5(coverFile.getAbsolutePath()),
+                isSelectedShareFollowers,
+                prePushResponse != null ? prePushResponse.mLiveStreamId : null,
+                prePushResponse.mPrePushAttach)
+          .map(new ResponseFunction<QLivePushConfig>()),
+
+            (response, config) -> {
+              config.setFps(response.mFps);
+              config.setMaxVideoBitrate(response.mVideoMaxBitrate);
+              config.setInitVideoBitrate(response.mVideoInitBitrate);
+              config.setMinVideoBitrate(response.mVideoMinBitrate);
+              config.mAudioBitrate = response.mAudioBitrate;
+              // 直播推流时i帧间隔,服务端单位默认都是s,需要转换一下
+              config.mIFrameIntervalMS = response.mIFrameInterval * 1000;
+              config.mResolution =
+                  LiveResolutionUtil.getPushResolutionIndex(response.mResolution);
+              config.mVideoConfig = response.mVideoConfig;
+              if (prePushResponse != null) {
+                config.mPrePushResponse = prePushResponse;
+                config.mIsPushOrigin = isPushOrigin;
+              }
+              if (BuildConfig.DEBUG) {
+                String debugHost =
+                    TestConfigManager.getString(ServerTestConst.LONG_CONNECTION_HOST, "");
+                if (!TextUtils.isEmpty(debugHost)) {
+                  List<String> hosts = new ArrayList<>();
+                  hosts.add(debugHost);
+                  config.setHosts(hosts);
+                }
+              }
+              DefaultPreferenceHelper
+                  .setLiveHardwareEncodeEnabled(response.mLiveHardwareEncodeEnabled);
+              DefaultPreferenceHelper
+                  .setLiveEncoderComplexityOptions(response.mEncoderComplexityOptions);
+              return config;
+            });
+  }
+```
+
+
+
+interval
+
+如果需要使用类似`request(long)`的方法来限制发射数据的数量，可以使用`take`操作符：
+
+```java
+Flowable.interval(1, TimeUnit.SECONDS)
+        .take(5)//只发射5个元素
+        .subscribe(integer -> Log.i("tag", String.valueOf(integer)));
+```
+
+  take操作符可以采用时间过滤，例如过滤出5秒之内发送的数据：
+
+```java
+Flowable.interval(1, TimeUnit.SECONDS)
+        .take(5, TimeUnit.SECONDS)//5秒之内的数据（这里输出0,1,2,3）
+        .subscribe(integer -> Log.i("tag", String.valueOf(integer)));
+```
+
+- 原理
+
+  1. rxjava不依赖Handler，如何做线程切换的?
+
+  2. 什么是背压？怎么实现的？
+
+     backpressure 背压
+
+     场景：被观察者事件流发送速度>观察者事件流消费速度，造成缓冲区溢出
+
+- 参考
+
+  [【Android】RxJava的使用（三）转换——map、flatMap](https://www.jianshu.com/p/52cd2d514528)
+  [**RxJava 2.x 使用详解(三) 过滤操作符**](https://maxwell-nc.github.io/android/rxjava2-3.html)
+
+  [RxJava学习笔记、思维导图
 
 
 
@@ -3336,13 +3679,82 @@ backpressure 背压
 
 3. 单例模式
 
-   - what? 全局就一个对象
+   - what? 
+
+     全局就一个对象
 
    - 使用场景
 
-     ActivityManager.getService() 获取ServiceManager binder池里面的AMS的binder的代理
+     ​	ActivityManager.getService() 获取ServiceManager binder池里面的AMS的binder的代理
 
-     double check+volitale的单例模式
+     ​	double check+volitale的单例模式
+
+   - 代码示例
+
+     `com.example.wangzhibo.lovestudy.java.design_patterns`
+
+     ```java
+     // 最简单版(非线程安全)
+     class SingleTon{
+       private static SingleTon singleInstance;
+       private SingleTon(){
+        
+       }
+       
+       public static SingleTon getInstance(){
+         if(singleInstance == null){
+           singleInstance = new SingleTon();
+         }
+         return singleInstance;
+       }
+     }
+     ```
+
+     ```java
+     // double check volatile 版
+     class SingleTon{
+       private volatile static SingleTon singleInstance;
+       private SingleTon(){
+        
+       }
+       
+       public static SingleTon getInstance(){
+         if(singleInstance == null){
+           synchronized(SingleTon.class){
+             if(singleInstance == null){
+             	singleInstance = new SingleTon();
+             }
+           }
+         }
+         return singleInstance;
+       }
+     }
+     ```
+
+     ```java
+     // 内部类懒汉式
+     // 不用解决多线程问题，按需加载
+     class singleTon{
+     	public static SingleTon getInstance(){
+         return InnerClass.singleInstance;
+       }
+       static class InnerClass{
+         private static SingleTon singleInstance = new singleTon();
+       }
+     }
+     ```
+
+   - 扩展
+
+     以为单例都是模板，有没有可能不用到处实现就能写出单例
+
+   - 参考
+
+     [Java 线程安全的单例写法及volatile、原子性、可见性](https://blog.csdn.net/guojiayuan002/article/details/80025080)
+
+     
+
+     
 
      
 
