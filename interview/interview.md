@@ -1,3 +1,7 @@
+
+
+[TOC]
+
 # 目录
 
 ---
@@ -1447,6 +1451,14 @@ Message next(){}
 }
 }
 ```
+
+#### Barrier
+
+ `postSyncBarrier`: Handler 的同步屏障。它的作用是可以拦截 Looper 对同步消息的获取和分发，加入同步屏障之后，Looper 只会获取和处理异步消息，如果没有异步消息那么就会进入阻塞状态。也就是说，对View绘制渲染的处理操作可以优先处理（设置为异步消息）。
+
+
+
+#### Choreographer
 
 
 
@@ -3054,6 +3066,8 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 
 
+
+
 ## Android Gradle Plugin(待)
 
 通过阅读 Android Gradle Plugin 源码，理解 Gradle 构建项目的过程，了解插件开发过程。
@@ -3486,6 +3500,14 @@ Flowable.interval(1, TimeUnit.SECONDS)
 
 - 原理
 
+  Observeble(被观察者)
+
+  > 分为hot observeble和cold observeble
+  >
+  > 
+  >
+  > 参考：[Cold Observable 和 Hot Observable](https://www.jianshu.com/p/12fb42bcf9fd)
+
   1. rxjava不依赖Handler，如何做线程切换的?
 
   2. 什么是背压？怎么实现的？
@@ -3497,6 +3519,7 @@ Flowable.interval(1, TimeUnit.SECONDS)
 - 参考
 
   [【Android】RxJava的使用（三）转换——map、flatMap](https://www.jianshu.com/p/52cd2d514528)
+
   [**RxJava 2.x 使用详解(三) 过滤操作符**](https://maxwell-nc.github.io/android/rxjava2-3.html)
 
   [RxJava学习笔记、思维导图
