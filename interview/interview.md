@@ -1526,13 +1526,29 @@ Message next(){}
 }
 ```
 
+Q:
+
+- 消息没了之后，怎么样？
+
+  这玩意不是epoll_wait吗？应该是wait态，管道有消息之后，应该会对应的notify 唤醒线程。idleHandler
+
+- delay怎么实现？
+
+  Message.when字段
+
+  
+
+
+
+
+
 #### Barrier
 
  `postSyncBarrier`: Handler 的同步屏障。它的作用是可以拦截 Looper 对同步消息的获取和分发，加入同步屏障之后，Looper 只会获取和处理异步消息，如果没有异步消息那么就会进入阻塞状态。也就是说，对View绘制渲染的处理操作可以优先处理（设置为异步消息）。
 
 
 
-#### Choreographer
+#### IdelHandler
 
 
 
@@ -1571,6 +1587,12 @@ int eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMilli
 
 ```
 
+- 面试题
+
+  Q：epoll有2个队列，干嘛的?
+
+  ​	我猜测一个是管道的队列，一个是线程队列，循环的查询每个管道是否有数据，然后去找到对应的线程唤醒
+  
 - 参考
 
   [Android消息机制2-Handler(Native层)](<http://gityuan.com/2015/12/27/handler-message-native/>)
@@ -1750,7 +1772,9 @@ applicationThread.scheduleLaunchActivity  ->  ActivityThread.LaunchActivity  -> 
 
 ActivityThread.perfromResumeActivity -> windownManager.addView(创建viewRootImpl) -> windowGlobal.addView() ->  ViewRootImpl.requestLayout ->  ViewRootImpl.performTraversal
 
-**解释**:  Ams启动进程后，Activity
+**解释**:  Ams启动进程后，
+
+
 
 ### 测量
 
@@ -1964,6 +1988,26 @@ GPU: measure -> layout -> draw(之前都是在CPU中) -> GPU(OpenGL ES) -> Reste
 [Android丢帧分析与优化](https://www.jianshu.com/p/989ce9eb7af8)
 
 [深入Android渲染机制](http://www.cnblogs.com/ldq2016/p/6668148.html)
+
+
+
+#### Choreographer
+
+> 编舞者，复杂掌控动画、绘制
+
+![image-20191205111436332](assets/image-20191205111436332.png)
+
+启动流程
+
+​	Choreographer$FrameDisplayEventRecevier.run() -> 
+
+
+
+名称
+
+​	vertical sync pulse：垂直同步脉冲
+
+
 
 
 
@@ -2610,7 +2654,7 @@ SurfaceTexture
 
 
 
-### 6. RecyclerView
+### 6. RecyclerView（10级）
 
 - 背景
 
@@ -2660,7 +2704,13 @@ SurfaceTexture
 
 - 常见面试题
 
-  1. 
+  1. 多少个缓存，怎么用的？
+
+  2. layout什么时候发生？
+
+  3. recyclerView优化
+
+     内存，绘制
 
 - 参考
 
