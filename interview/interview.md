@@ -655,53 +655,8 @@ public enum CustomEnum {
 
 
 
-### 9.2 虚拟机
 
-#### JIT(HotSpot )
-
-> 即Just-in-time,动态(即时)编译，边运行边编译
-
-- 背景：
-
-  ​	加速热点代码的运行
-
-- 原理 
-
-  ​	Java程序最初是通过解释器进行解释执行的，当虚拟机发现**某个方法或代码块**运行的**特别频繁**时，就会把这些代码认定为**“热点代码”（Hot Spot Code）**。为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成为**本地平台相关的机器码**，并进行优化，而完成这个任务的编译器称为及时编译器（Just In Time Compiler，简称JIT）。
-
-#### AOT
-
-> Ahead Of Time，指运行前编译
-
-[AOT,JIT区别，各自优劣，混合编译](https://blog.csdn.net/h1130189083/article/details/78302502)
-
-
-
-#### Dalvik
-
-Dalvik使用JIT
-使用.dex字节码，是针对Android设备优化后的DVM所使用的运行时编译字节码
-.odex是对dex的优化，deodex在系统第一次开机时会提取所有apk内的dex文件，odex优化将dex提前提取出，加快了开机的速度和程序运行的速度
-
-#### ART
-
-ART 使用AOT
-在安装apk时会进行预编译，生成OAT文件，仍以.odex保存，但是与Dalvik下不同，这个文件是可执行文件
-dex、odex 均可通过dex2oat生成oat文件，以实现兼容性，在大型应用安装时需要更多时间和空间
-
-
-
-#### Android N的混合编译
-
-在Android N中引入了一种新的编译模式，同时使用JIT和AOT。这是我在网上找到的一些解释：
-
-> 包含了一个混合模式的运行时。应用在安装时不做编译，而是解释字节码，所以可以快速启动。ART中有一种新的、更快的解释器，通过一种新的JIT完成，但是这种JIT的信息不是持久化的。取而代之的是，代码在执行期间被分析，分析结果保存起来。然后，当设备空转和充电的时候，ART会执行针对“热代码”进行的基于分析的编译，其他代码不做编译。为了得到更优的代码，ART采用了几种技巧包括深度内联。
-> 对同一个应用可以编译数次，或者找到变“热”的代码路径或者对已经编译的代码进行新的优化，这取决于分析器在随后的执行中的分析数据。
-
-这些大概说的是新的ART在安装程序时使用JIT，在JIT编译了一些代码后将这些代码保存到本地，等到设备空闲的时候将保存的这些代码使用AOT编译生成可执行文件保存到本地，待下次运行时直接使用，并且不断监视代码的更新，在代码有更新后重新生成可执行文件。
-
-
-### 9.3 继承
+### 9.2 继承
 
 1. 静态方法与静态变量的重写
 
@@ -1432,9 +1387,54 @@ new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
 
 [Android开发工程师面试指南](https://github.com/sucese/android-interview-guide)
 
+### 0.1 虚拟机
+
+#### JIT(HotSpot )
+
+> 即Just-in-time,动态(即时)编译，边运行边编译
+
+- 背景：
+
+  ​	加速热点代码的运行
+
+- 原理 
+
+  ​	Java程序最初是通过解释器进行解释执行的，当虚拟机发现**某个方法或代码块**运行的**特别频繁**时，就会把这些代码认定为**“热点代码”（Hot Spot Code）**。为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成为**本地平台相关的机器码**，并进行优化，而完成这个任务的编译器称为及时编译器（Just In Time Compiler，简称JIT）。
+
+#### AOT
+
+> Ahead Of Time，指运行前编译
+
+[AOT,JIT区别，各自优劣，混合编译](https://blog.csdn.net/h1130189083/article/details/78302502)
+
+[扒一扒 Android 运行时: DVM vs ART](https://www.jianshu.com/p/047d5b00ff7a)
 
 
-## 0.1 系统启动过程(待)
+
+#### Dalvik
+
+Dalvik使用JIT
+使用.dex字节码，是针对Android设备优化后的DVM所使用的运行时编译字节码
+.odex是对dex的优化，deodex在系统第一次开机时会提取所有apk内的dex文件，odex优化将dex提前提取出，加快了开机的速度和程序运行的速度
+
+#### ART
+
+ART 使用AOT
+在安装apk时会进行预编译，生成OAT文件，仍以.odex保存，但是与Dalvik下不同，这个文件是可执行文件
+dex、odex 均可通过dex2oat生成oat文件，以实现兼容性，在大型应用安装时需要更多时间和空间
+
+
+
+#### Android N的混合编译
+
+在Android N中引入了一种新的编译模式，同时使用JIT和AOT。这是我在网上找到的一些解释：
+
+> 包含了一个混合模式的运行时。应用在安装时不做编译，而是解释字节码，所以可以快速启动。ART中有一种新的、更快的解释器，通过一种新的JIT完成，但是这种JIT的信息不是持久化的。取而代之的是，代码在执行期间被分析，分析结果保存起来。然后，当设备空转和充电的时候，ART会执行针对“热代码”进行的基于分析的编译，其他代码不做编译。为了得到更优的代码，ART采用了几种技巧包括深度内联。
+> 对同一个应用可以编译数次，或者找到变“热”的代码路径或者对已经编译的代码进行新的优化，这取决于分析器在随后的执行中的分析数据。
+
+这些大概说的是新的ART在安装程序时使用JIT，在JIT编译了一些代码后将这些代码保存到本地，等到设备空闲的时候将保存的这些代码使用AOT编译生成可执行文件保存到本地，待下次运行时直接使用，并且不断监视代码的更新，在代码有更新后重新生成可执行文件。
+
+## 0.2 系统启动过程(待)
 
 ### init 进程
 
@@ -2706,17 +2706,21 @@ SurfaceTexture
 
   1. 多少个缓存，怎么用的？
 
+     三级缓存，
+
   2. layout什么时候发生？
 
   3. recyclerView优化
 
-     内存，绘制
+     内存，
 
 - 参考
 
   [RecyclerView问题汇总](https://juejin.im/post/5cce410551882541e40e471d) [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
-  
+  [RecyclerView缓存原理，有图有真相](https://juejin.im/post/5b79a0b851882542b13d204b)
+
+  [RecyclerView性能优化](https://www.jianshu.com/p/bd432a3527d6)
 
   LayoutManager
 
@@ -2731,12 +2735,18 @@ SurfaceTexture
   > 为Item的一般操作添加动画效果，如，增删条目等
 
    SnapHelper
-
+  
   > 在某些场景下，卡片列表滑动浏览[有的叫轮播图]，希望当滑动停止时可以将当前卡片停留在屏幕某个位置，比如停在左边，以吸引用户的焦点。那么可以使用RecyclerView + Snaphelper来实现
   
-  RecycledViewPool
+  Recycler
   
-  > 缓存池，针对 ItemType来的
+  > 
+  
+  ​	RecycledViewPool
+  
+  > ​	缓存池，针对 ItemType来的
+  
+  
 
 
 
@@ -3081,7 +3091,9 @@ SurfaceTexture
 
 > - VirtualAPK、Tinker
 >
->   通过阅读 VirtualAPK 源码，理解热修复、插件化的原理。
+> 通过阅读 VirtualAPK 源码，理解热修复、插件化的原理。
+
+
 
 ### 组件化
 
@@ -3146,9 +3158,7 @@ SurfaceTexture
 
   2. DroidPlugin
 
-     
-
-
+    
 
 - 参考：
 
@@ -3184,11 +3194,19 @@ https://juejin.im/entry/5c008cbf51882531b81b0cb8
 
 - 问题
 
-  **is_preverify 预验证 给每个class添加一个对其他dex的class的引用**
+  Q:is_preverify 预验证
+
+  ​	给每个class添加一个对其他dex的class的引用
+
+  Q:android 7.0 预加载使dex插入失效
 
 - 参考：
 
-  [Android 热修复原理篇及几大方案比较 - CSDN博客](https://juejin.im/entry/5b7bdd35e51d4538807130e4) [gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
+  [Android 热修复原理篇及几大方案比较 - CSDN博客](https://juejin.im/entry/5b7bdd35e51d4538807130e4) 
+  
+  [gitbook整理](https://lrh1993.gitbooks.io/android_interview_guide/content/android/advance/hotfix.html)
+
+
 
 
 
@@ -3412,6 +3430,8 @@ ApiManger apiManger = RetrofitHelper.getManger();
 compose
 
 > 
+>
+> [不要打断链式结构：使用 RxJava的 compose() 操作符](http://www.jcodecraeer.com/a/anzhuokaifa/androidkaifa/2015/0819/3327.html)
 
 flat (铺平）
 
@@ -3652,7 +3672,11 @@ Flowable.interval(1, TimeUnit.SECONDS)
 
   1. rxjava不依赖Handler，如何做线程切换的?
 
-  2. 什么是背压？怎么实现的？
+  2. 还会问多次切换？线程池？
+
+     就是多次掉那个observeon和subscibeon呀
+
+  3. 什么是背压？怎么实现的？
 
      backpressure 背压
 
@@ -4081,9 +4105,11 @@ what?
 
 [操作系统(operating_system.md)](../operating_system.md)
 
-# 汇编
+# 计算机组成原理
 
-## apcs调用
+## 汇编
+
+### apcs调用
 
 APCS，ARM 过程调用标准(ARM Procedure Call Standard)，提供了紧凑的编写例程的一种机制，定义的例程可以与其他例程交织在一起。最显著的一点是对这些例程来自哪里没有明确的限制。它们可以编译自 C、 Pascal、也可以是用汇编语言写成的。
 
@@ -4099,7 +4125,7 @@ APCS 定义了:
 
 
 
-## sp寄存器的作用
+### sp寄存器的作用
 
  SS, SP, BP 三个寄存器
 
@@ -4110,7 +4136,7 @@ BP: 基数指针寄存器BP(base pointer)是一个寄存器，它的用途有点
 
 
 
-## armcpu的三级流水线
+### armcpu的三级流水线
 
 - 为什么需要三级流水线?
 - 什么是？
@@ -4120,7 +4146,7 @@ ldr
 
 
 
-## Blx bl b 的跳转范围
+### Blx bl b 的跳转范围
 
 B： 跳转。
 
@@ -4138,6 +4164,8 @@ BLX:  带链接和状态切换的跳转。结合了BX与BL功能，
 
 
 
+
+
 # <a id="算法">算法</a>
 
 ## 数组相关
@@ -4149,6 +4177,18 @@ BLX:  带链接和状态切换的跳转。结合了BX与BL功能，
 [算法大纲](https://github.com/LRH1993/android_interview)
 
 [剑指offer](https://github.com/LRH1993/android_interview/blob/master/algorithm/For-offer.md)
+
+
+
+
+
+# 业务开发
+
+1.熟悉业务和接口
+
+
+
+
 
 
 
