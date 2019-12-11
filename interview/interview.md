@@ -2710,15 +2710,15 @@ SurfaceTexture
 
   2. layout什么时候发生？
 
-  3. recyclerView优化
-
-     内存，
+  3. recyclerView怎么优化？
 
 - 参考
 
   [RecyclerView问题汇总](https://juejin.im/post/5cce410551882541e40e471d) [RecyclerView的新机制：预取（Prefetch）](https://juejin.im/entry/58a30bf461ff4b006b5b53e3)
 
   [RecyclerView缓存原理，有图有真相](https://juejin.im/post/5b79a0b851882542b13d204b)
+
+  [RecyclerView的基本设计结构](https://juejin.im/post/5c10737de51d457926430f99)
 
   [RecyclerView性能优化](https://www.jianshu.com/p/bd432a3527d6)
 
@@ -2733,7 +2733,7 @@ SurfaceTexture
   ItemAnimator 
 
   > 为Item的一般操作添加动画效果，如，增删条目等
-
+  
    SnapHelper
   
   > 在某些场景下，卡片列表滑动浏览[有的叫轮播图]，希望当滑动停止时可以将当前卡片停留在屏幕某个位置，比如停在左边，以吸引用户的焦点。那么可以使用RecyclerView + Snaphelper来实现
