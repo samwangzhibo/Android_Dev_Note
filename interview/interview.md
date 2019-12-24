@@ -1469,17 +1469,78 @@ dex、odex 均可通过dex2oat生成oat文件，以实现兼容性，在大型�
 
 ## 1. Handler
 
-1. Handler通过 `sendMessage()` 发送Message到MessageQueue队列；
-
-2. Looper通过 `loop()` ，不断提取出达到触发条件的Message，并将Message交给target来处理；
-
+1. Handler通过 `sendMessage(message)` -> `MessageQueue.enqueue(message)` 发送Message到MessageQueue队列；
+2. Looper通过 `loop()`  -> `messageQueue.next()`，不断提取出达到触发条件的Message，并将Message交给target来处理；
 3. 经过dispatchMessage()后，交回给Handler的handleMessage()来进行相应地处理。
 
-   **ps** : 
+```java
+// 1.handler.enqueueMessage()
+private boolean enqueueMessage(MessageQueue queue, Message msg, long uptimeMillis) {
+  msg.target = this;
+  if (mAsynchronous) {
+    msg.setAsynchronous(true);
+  }
+  return queue.enqueueMessage(msg, uptimeMillis);
+}
 
-   > 1. 将Message加入MessageQueue时，处往管道写入字符，可以会唤醒loop线程；
-   >
-   > 2. 如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
+boolean enqueueMessage(Message msg, long when) {
+			...
+
+        synchronized (this) {
+        // 如果是退出状态，回收当前消息
+            if (mQuitting) {
+                IllegalStateException e = new IllegalStateException(
+                        msg.target + " sending message to a Handler on a dead thread");
+                Log.w(TAG, e.getMessage(), e);
+                msg.recycle();
+                return false;
+            }
+
+            msg.markInUse();
+            msg.when = when;
+            Message p = mMessages;
+            boolean needWake;
+        // 如果当前没有消息或者放入的消息需要插入最前面(小于队列头时间)
+            if (p == null || when == 0 || when < p.when) {
+                // New head, wake up the event queue if blocked.
+                msg.next = p;
+                mMessages = msg;
+                needWake = mBlocked;
+            } else {
+                // Inserted within the middle of the queue.  Usually we don't have to wake up the event queue unless there is a barrier at the head of the queue
+                // and the message is the earliest asynchronous message in the queue.
+                needWake = mBlocked && p.target == null && msg.isAsynchronous();
+                Message prev;
+                for (;;) {
+                    prev = p;
+                    p = p.next;
+                    if (p == null || when < p.when) {
+                        break;
+                    }
+                    if (needWake && p.isAsynchronous()) {
+                        needWake = false;
+                    }
+                }
+                msg.next = p; // invariant: p == prev.next
+                prev.next = msg;
+            }
+
+            // We can assume mPtr != 0 because mQuitting is false.
+            if (needWake) {
+                nativeWake(mPtr);
+            }
+        }
+        return true;
+    }
+```
+
+
+
+**ps** : 
+
+> 1. 将Message加入MessageQueue时，处往管道写入字符，可以会唤醒loop线程；
+>
+> 2. 如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
 
 ![handler_java](http://gityuan.com/images/handler/handler_java.jpg)
 
@@ -1511,11 +1572,136 @@ public void quit() {
 
 ```
 
+T:
+
+> 1. 一个线程一个Looper，Looper的初始化是prepare()函数，里面会设置ThreadLocal的线程对象。
+> 2. 之后调用`looper.loop()`，会循环的从MessageQueue获取Message，然后交给Message的target(Handler)处理(handlerMessage())
+> 3. Looper要退出的话，调用`quit()`，会清空MessageQueue，并且返回一个空消息，looper.loop()退出循环条件
+> 4. 主线程的Looper初始化在`ActivityThread.main()`
+
+Q:
+
+- 1个线程一个Looper()?
+
+  是的
+
+- 一个Looper几个Handler?
+
+  一个Looper，一个MessageQueue，可以存放多个Message，可以有多个Handler
+
+
+
+
+
 ### MessageQueue
 
 ```java
 // 1.获取消息 
-Message next(){}
+Message next() {
+        // Return here if the message loop has already quit and been disposed.
+        // This can happen if the application tries to restart a looper after quit
+        // which is not supported.
+        final long ptr = mPtr;
+        if (ptr == 0) {
+            return null;
+        }
+
+        int pendingIdleHandlerCount = -1; // -1 only during first iteration
+        int nextPollTimeoutMillis = 0;
+        for (;;) {
+            if (nextPollTimeoutMillis != 0) {
+                Binder.flushPendingCommands();
+            }
+
+            nativePollOnce(ptr, nextPollTimeoutMillis);
+
+            synchronized (this) {
+                // Try to retrieve the next message.  Return if found.
+                final long now = SystemClock.uptimeMillis();
+                Message prevMsg = null;
+                Message msg = mMessages;
+                if (msg != null && msg.target == null) {
+                    // Stalled by a barrier.  Find the next asynchronous message in the queue.
+                    do {
+                        prevMsg = msg;
+                        msg = msg.next;
+                    } while (msg != null && !msg.isAsynchronous());
+                }
+                if (msg != null) {
+                    if (now < msg.when) {
+                        // Next message is not ready.  Set a timeout to wake up when it is ready.
+                        nextPollTimeoutMillis = (int) Math.min(msg.when - now, Integer.MAX_VALUE);
+                    } else {
+                        // Got a message.
+                        mBlocked = false;
+                        if (prevMsg != null) {
+                            prevMsg.next = msg.next;
+                        } else {
+                            mMessages = msg.next;
+                        }
+                        msg.next = null;
+                        if (DEBUG) Log.v(TAG, "Returning message: " + msg);
+                        msg.markInUse();
+                        return msg;
+                    }
+                } else {
+                    // No more messages.
+                    nextPollTimeoutMillis = -1;
+                }
+
+                // Process the quit message now that all pending messages have been handled.
+                if (mQuitting) {
+                    dispose();
+                    return null;
+                }
+
+                // If first time idle, then get the number of idlers to run.
+                // Idle handles only run if the queue is empty or if the first message
+                // in the queue (possibly a barrier) is due to be handled in the future.
+                if (pendingIdleHandlerCount < 0
+                        && (mMessages == null || now < mMessages.when)) {
+                    pendingIdleHandlerCount = mIdleHandlers.size();
+                }
+                if (pendingIdleHandlerCount <= 0) {
+                    // No idle handlers to run.  Loop and wait some more.
+                    mBlocked = true;
+                    continue;
+                }
+
+                if (mPendingIdleHandlers == null) {
+                    mPendingIdleHandlers = new IdleHandler[Math.max(pendingIdleHandlerCount, 4)];
+                }
+                mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);
+            }
+
+            // Run the idle handlers.
+            // We only ever reach this code block during the first iteration.
+            for (int i = 0; i < pendingIdleHandlerCount; i++) {
+                final IdleHandler idler = mPendingIdleHandlers[i];
+                mPendingIdleHandlers[i] = null; // release the reference to the handler
+
+                boolean keep = false;
+                try {
+                    keep = idler.queueIdle();
+                } catch (Throwable t) {
+                    Log.wtf(TAG, "IdleHandler threw exception", t);
+                }
+
+                if (!keep) {
+                    synchronized (this) {
+                        mIdleHandlers.remove(idler);
+                    }
+                }
+            }
+
+            // Reset the idle handler count to 0 so we do not run them again.
+            pendingIdleHandlerCount = 0;
+
+            // While calling an idle handler, a new message could have been delivered
+            // so go back and look again for a pending message without waiting.
+            nextPollTimeoutMillis = 0;
+        }
+    }
 
 // 2.移出所有消息，放入一条null消息，然后唤醒阻塞线程
  void quit(boolean safe) {
@@ -1526,6 +1712,8 @@ Message next(){}
 }
 ```
 
+如果MessageQueue当前没有可执行的Message（延时的消息还没有到），并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
+
 Q:
 
 - 消息没了之后，怎么样？
@@ -1534,9 +1722,15 @@ Q:
 
 - delay怎么实现？
 
-  Message.when字段
+  Message.when字段。正常的放入MessageQueue，但是取出消息的时候，我们会判断如果当前Message.when > 当前的时间，说明执行时间未到，会计算一下时间（保存为变量nextPollTimeoutMillis）,然后再循环的时候调用nativePollOnce(ptr, nextPollTimeoutMillis)进行阻塞。nativePollOnce()的作用类似与object.wait()。
 
-  
+  [Android Handler postDelayed的原理](https://www.jianshu.com/p/44b322dfc040)
+
+- 一个Handler几个Looper?
+
+  一个Handler一个Looper
+
+[Android Handler机制6之MessageQueue简介](https://www.jianshu.com/p/14ba1cb98b08)
 
 
 
@@ -1550,7 +1744,25 @@ Q:
 
 #### IdelHandler
 
+如果MessageQueue中没有Message，并处于Idle状态，则会执行 IdelHandler 接口中的方法，往往用于做一些清理性地工作。
 
+
+
+### Message
+
+同步消息
+
+> 正常情况下我们通过Handler发送的Message都属于同步消息，除非我们在发送的时候执行该消息是一个异步消息。同步消息会按顺序排列在队列中，除非指定Message的执行时间，否咋Message会按顺序执行。
+
+异步消息
+
+> 想要往消息队列中发送异步消息，我们必须在初始化Handler的时候通过构造函数public Handler(boolean async)中指定Handler是异步的，这样Handler在讲Message加入消息队列的时候就会将Message设置为异步的。
+
+Barrier
+
+> 障栅(Barrier) 是一种特殊的Message，它的target为null(只有障栅的target可以为null，如果我们自己视图设置Message的target为null的话会报异常)，并且arg1属性被用作障栅的标识符来区别不同的障栅。障栅的作用是用于拦截队列中同步消息，放行异步消息。就好像交警一样，在道路拥挤的时候会决定哪些车辆可以先通过，这些可以通过的车辆就是异步消息。
+
+Barrier之后的同步消息不会执行，直接跳过
 
 ### epoll
 
@@ -2647,6 +2859,7 @@ SurfaceTexture
   1. convertView的复用
   2. ViewHolder，减少findViewById的时间，静态内部类(防止内部类持有外部类引用，内部类不释放的话外部类会内存泄漏)
   3. 图片加载使用三级缓存(软引用(4.3之后已经无用，系统不再是内存不足的时候回收软引用)、 Lru缓存、本地缓存) 图片的错位问题，绑定url，对于imageview只设置其指定url下载下来的图片
+  4. fling过程不加载图片
 
 - 参考
 
@@ -2662,13 +2875,15 @@ SurfaceTexture
 
 - 方案
 
-  ​	提供RecyclerView组件，其中管理Item布局和手势响应的叫做**LayoutManager**， 自己已经带了ViewHolder的逻辑，中间的间隔修饰采用**ItemDecoration**组件处理。
+  ​	提供RecyclerView组件，其中管理Item布局和手势响应的叫做**LayoutManager**， 自己已经带了ViewHolder的逻辑，中间的间隔修饰采用**ItemDecoration**组件处理，Item动画采用ItemAnimator，引入了增量刷新的api。
 
-- 相对于ListView优点
-  - 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
-  - 支持单个Item刷新
-  - 默认封装ViewHolder操作
-  - 自定义缓存池
+- 相对于ListView优/缺点
+  
+  - 优点
+    1. 架构更合理，使用 `LayoutManager` 来随意的制定排列样式(Grid、Linear、Stagge)，还能处理用户手势，使用 `ItemDecoration` 来设置分割线等。
+    2. 支持单个Item刷新
+    3. 默认封装ViewHolder操作
+    4. 自定义缓存池
   
 - 怎么实现的？
 
@@ -3998,7 +4213,7 @@ what?
    - 适用场景 
 
      ​	alertDialog由很多参数构建而成，如果用构造函数处理的话，需要写很多个构造方法，然而用构建者模式的话，只需要把用到的构建进去就行。OkHttp参数配置
-  
+    
      
    
 9. 外观模式
